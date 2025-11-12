@@ -482,19 +482,51 @@ After the infrastructure is deployed, you need to deploy the Function App code:
    cd ..
    ```
 
-3. **Deploy the function** (from project root where host.json is located):
+3. **Deploy the function**:
+
+   **Option A: Use deployment script (Recommended - Easiest)**
+
+   The deployment scripts automatically handle copying compiled files to the correct locations:
+
+   **PowerShell (Windows):**
+
+   ```powershell
+   cd azure-functions
+   .\deploy.ps1 -FunctionAppName <function-app-name>
+   ```
+
+   **Bash (Linux/Mac):**
 
    ```bash
-   func azure functionapp publish <function-app-name> --typescript
+   cd azure-functions
+   chmod +x deploy.sh
+   ./deploy.sh <function-app-name>
+   ```
+
+   **Option B: Manual deployment with pre-compiled JavaScript**
+
+   ```bash
+   # From project root where host.json is located
+   func azure functionapp publish <function-app-name> --javascript
+   ```
+
+   **Note:** With Option B, you need to ensure the compiled `lib/` files are accessible. The compiled files are in `azure-functions/dist/lib/`, but Azure Functions expects them relative to the function code. You may need to copy them manually or use the deployment script.
+
+   **Option C: Deploy TypeScript for remote build**
+
+   ```bash
+   # From project root where host.json is located
+   func azure functionapp publish <function-app-name> --typescript --build remote
    ```
 
    Replace `<function-app-name>` with the value from the deployment output (`functionAppName`).
 
-   **Note:**
+   **Important Notes:**
 
-   - Deploy from the project root directory (where `host.json` is located) since the function code imports from the `lib/` directory.
-   - Use the `--typescript` flag to tell Azure Functions that this is a TypeScript project.
-   - Alternatively, if you've built the TypeScript to JavaScript, you can deploy without the flag from the `azure-functions` directory after building.
+   - **Option A (Recommended)**: The deployment scripts automatically build the code, copy compiled `lib/` and `types/` files to the correct locations, and deploy everything. This ensures all dependencies are included.
+   - **Option B**: Manual deployment. You must ensure compiled `lib/` files are accessible. The compiled output structure is `dist/azure-functions/weekly-briefings/index.js` with imports like `../../lib/ai/generators` that resolve to `dist/lib/ai/generators.js`.
+   - **Option C**: Azure will compile TypeScript remotely. All TypeScript source files (including `lib/**/*.ts`) must be included in the deployment package. The root-level `.funcignore` has been configured to allow TypeScript files. Azure will need a `tsconfig.json` that can compile the entire project structure.
+   - The function code imports from `../../lib/ai/generators`, so the compiled `lib/` files must be available at runtime for the relative imports to resolve correctly.
 
 ## Next Steps
 

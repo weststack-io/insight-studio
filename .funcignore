@@ -1,0 +1,22 @@
+*.js.map
+.git*
+.vscode
+local.settings.json
+test
+.next
+out
+build
+# Include dist - we need compiled lib files for deployment
+# Include *.ts - Azure needs source files if using --typescript --build remote
+node_modules
+app
+components
+infrastructure
+prisma
+*.md
+.env*
+next.config.js
+postcss.config.mjs
+# Keep root tsconfig.json for Next.js, but Azure Functions will use azure-functions/tsconfig.json
+next-env.d.ts
+

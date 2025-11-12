@@ -198,141 +198,142 @@ resource appInsights 'Microsoft.Insights/components@2020-02-02' = {
   }
 }
 
-// Get Application Insights connection string (using reference function)
-var appInsightsConnectionString = 'InstrumentationKey=${appInsights.properties.InstrumentationKey};IngestionEndpoint=https://${location}.in.applicationinsights.azure.com/;LiveEndpoint=https://${location}.livediagnostics.monitor.azure.com/'
+// Moved to it's own module ...
+// // Get Application Insights connection string (using reference function)
+// var appInsightsConnectionString = 'InstrumentationKey=${appInsights.properties.InstrumentationKey};IngestionEndpoint=https://${location}.in.applicationinsights.azure.com/;LiveEndpoint=https://${location}.livediagnostics.monitor.azure.com/'
 
-// App Service Plan (Consumption Plan for Azure Functions)
-resource appServicePlan 'Microsoft.Web/serverfarms@2024-11-01' = {
-  name: '${functionAppName}-plan'
-  location: location
-  kind: 'functionapp'
-  sku: {
-    name: 'Y1'
-    tier: 'Dynamic'
-  }
-  properties: {
-    reserved: true // Required for Linux consumption plans
-  }
-}
+// // App Service Plan (Consumption Plan for Azure Functions)
+// resource appServicePlan 'Microsoft.Web/serverfarms@2024-11-01' = {
+//   name: '${functionAppName}-plan'
+//   location: location
+//   kind: 'functionapp'
+//   sku: {
+//     name: 'Y1'
+//     tier: 'Dynamic'
+//   }
+//   properties: {
+//     reserved: true // Required for Linux consumption plans
+//   }
+// }
 
-// Function App
-resource functionApp 'Microsoft.Web/sites@2025-03-01' = {
-  name: functionAppName
-  location: location
-  kind: 'functionapp,linux'
-  properties: {
-    serverFarmId: appServicePlan.id
-    siteConfig: {
-      linuxFxVersion: 'NODE|${nodeVersion}'
-      alwaysOn: false // Consumption plan doesn't support always on
-      http20Enabled: true
-      minTlsVersion: '1.2'
-      ftpsState: 'Disabled'
-      appSettings: [
-        {
-          name: 'AzureWebJobsStorage'
-          value: 'DefaultEndpointsProtocol=https;AccountName=${functionStorageAccount.name};AccountKey=${functionStorageAccount.listKeys().keys[0].value};EndpointSuffix=${environment().suffixes.storage}'
-        }
-        {
-          name: 'WEBSITE_CONTENTAZUREFILECONNECTIONSTRING'
-          value: 'DefaultEndpointsProtocol=https;AccountName=${functionStorageAccount.name};AccountKey=${functionStorageAccount.listKeys().keys[0].value};EndpointSuffix=${environment().suffixes.storage}'
-        }
-        {
-          name: 'WEBSITE_CONTENTSHARE'
-          value: toLower(functionAppName)
-        }
-        {
-          name: 'FUNCTIONS_EXTENSION_VERSION'
-          value: '~4'
-        }
-        {
-          name: 'WEBSITE_NODE_DEFAULT_VERSION'
-          value: nodeVersion
-        }
-        {
-          name: 'FUNCTIONS_WORKER_RUNTIME'
-          value: 'node'
-        }
-        {
-          name: 'APPINSIGHTS_INSTRUMENTATIONKEY'
-          value: appInsights.properties.InstrumentationKey
-        }
-        {
-          name: 'APPLICATIONINSIGHTS_CONNECTION_STRING'
-          value: appInsightsConnectionString
-        }
-        {
-          name: 'AZURE_SQL_CONNECTION_STRING'
-          value: 'Server=tcp:${sqlServer.properties.fullyQualifiedDomainName},1433;Initial Catalog=${sqlDatabaseName};Persist Security Info=False;User ID=${sqlAdminUsername};Password=${sqlAdminPassword};MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;'
-        }
-        {
-          name: 'AZURE_STORAGE_CONNECTION_STRING'
-          value: 'DefaultEndpointsProtocol=https;AccountName=${storageAccount.name};AccountKey=${storageAccount.listKeys().keys[0].value};EndpointSuffix=${environment().suffixes.storage}'
-        }
-        {
-          name: 'AZURE_AD_CLIENT_ID'
-          value: azureAdClientId
-        }
-        {
-          name: 'AZURE_AD_CLIENT_SECRET'
-          value: azureAdClientSecret
-        }
-        {
-          name: 'AZURE_AD_TENANT_ID'
-          value: azureAdTenantId
-        }
-        {
-          name: 'AZURE_OPENAI_ENDPOINT'
-          value: azureOpenAiEndpoint
-        }
-        {
-          name: 'AZURE_OPENAI_API_KEY'
-          value: azureOpenAiApiKey
-        }
-        {
-          name: 'AZURE_OPENAI_DEPLOYMENT_NAME'
-          value: azureOpenAiDeploymentName
-        }
-        {
-          name: 'AZURE_SEARCH_ENDPOINT'
-          value: azureSearchEndpoint
-        }
-        {
-          name: 'AZURE_SEARCH_API_KEY'
-          value: azureSearchApiKey
-        }
-        {
-          name: 'AZURE_SEARCH_INDEX_NAME'
-          value: azureSearchIndexName
-        }
-        {
-          name: 'ADDEPAR_API_URL'
-          value: addeparApiUrl
-        }
-        {
-          name: 'ADDEPAR_CLIENT_ID'
-          value: addeparClientId
-        }
-        {
-          name: 'ADDEPAR_CLIENT_SECRET'
-          value: addeparClientSecret
-        }
-        {
-          name: 'NEXTAUTH_SECRET'
-          value: nextAuthSecret
-        }
-        {
-          name: 'NEXTAUTH_URL'
-          value: nextAuthUrl
-        }
-      ]
-    }
-    httpsOnly: true
-  }
-  identity: {
-    type: 'SystemAssigned'
-  }
-}
+// // Function App
+// resource functionApp 'Microsoft.Web/sites@2025-03-01' = {
+//   name: functionAppName
+//   location: location
+//   kind: 'functionapp,linux'
+//   properties: {
+//     serverFarmId: appServicePlan.id
+//     siteConfig: {
+//       linuxFxVersion: 'NODE|${nodeVersion}'
+//       alwaysOn: false // Consumption plan doesn't support always on
+//       http20Enabled: true
+//       minTlsVersion: '1.2'
+//       ftpsState: 'Disabled'
+//       appSettings: [
+//         {
+//           name: 'AzureWebJobsStorage'
+//           value: 'DefaultEndpointsProtocol=https;AccountName=${functionStorageAccount.name};AccountKey=${functionStorageAccount.listKeys().keys[0].value};EndpointSuffix=${environment().suffixes.storage}'
+//         }
+//         {
+//           name: 'WEBSITE_CONTENTAZUREFILECONNECTIONSTRING'
+//           value: 'DefaultEndpointsProtocol=https;AccountName=${functionStorageAccount.name};AccountKey=${functionStorageAccount.listKeys().keys[0].value};EndpointSuffix=${environment().suffixes.storage}'
+//         }
+//         {
+//           name: 'WEBSITE_CONTENTSHARE'
+//           value: toLower(functionAppName)
+//         }
+//         {
+//           name: 'FUNCTIONS_EXTENSION_VERSION'
+//           value: '~4'
+//         }
+//         {
+//           name: 'WEBSITE_NODE_DEFAULT_VERSION'
+//           value: nodeVersion
+//         }
+//         {
+//           name: 'FUNCTIONS_WORKER_RUNTIME'
+//           value: 'node'
+//         }
+//         {
+//           name: 'APPINSIGHTS_INSTRUMENTATIONKEY'
+//           value: appInsights.properties.InstrumentationKey
+//         }
+//         {
+//           name: 'APPLICATIONINSIGHTS_CONNECTION_STRING'
+//           value: appInsightsConnectionString
+//         }
+//         {
+//           name: 'AZURE_SQL_CONNECTION_STRING'
+//           value: 'Server=tcp:${sqlServer.properties.fullyQualifiedDomainName},1433;Initial Catalog=${sqlDatabaseName};Persist Security Info=False;User ID=${sqlAdminUsername};Password=${sqlAdminPassword};MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;'
+//         }
+//         {
+//           name: 'AZURE_STORAGE_CONNECTION_STRING'
+//           value: 'DefaultEndpointsProtocol=https;AccountName=${storageAccount.name};AccountKey=${storageAccount.listKeys().keys[0].value};EndpointSuffix=${environment().suffixes.storage}'
+//         }
+//         {
+//           name: 'AZURE_AD_CLIENT_ID'
+//           value: azureAdClientId
+//         }
+//         {
+//           name: 'AZURE_AD_CLIENT_SECRET'
+//           value: azureAdClientSecret
+//         }
+//         {
+//           name: 'AZURE_AD_TENANT_ID'
+//           value: azureAdTenantId
+//         }
+//         {
+//           name: 'AZURE_OPENAI_ENDPOINT'
+//           value: azureOpenAiEndpoint
+//         }
+//         {
+//           name: 'AZURE_OPENAI_API_KEY'
+//           value: azureOpenAiApiKey
+//         }
+//         {
+//           name: 'AZURE_OPENAI_DEPLOYMENT_NAME'
+//           value: azureOpenAiDeploymentName
+//         }
+//         {
+//           name: 'AZURE_SEARCH_ENDPOINT'
+//           value: azureSearchEndpoint
+//         }
+//         {
+//           name: 'AZURE_SEARCH_API_KEY'
+//           value: azureSearchApiKey
+//         }
+//         {
+//           name: 'AZURE_SEARCH_INDEX_NAME'
+//           value: azureSearchIndexName
+//         }
+//         {
+//           name: 'ADDEPAR_API_URL'
+//           value: addeparApiUrl
+//         }
+//         {
+//           name: 'ADDEPAR_CLIENT_ID'
+//           value: addeparClientId
+//         }
+//         {
+//           name: 'ADDEPAR_CLIENT_SECRET'
+//           value: addeparClientSecret
+//         }
+//         {
+//           name: 'NEXTAUTH_SECRET'
+//           value: nextAuthSecret
+//         }
+//         {
+//           name: 'NEXTAUTH_URL'
+//           value: nextAuthUrl
+//         }
+//       ]
+//     }
+//     httpsOnly: true
+//   }
+//   identity: {
+//     type: 'SystemAssigned'
+//   }
+// }
 
 // Outputs
 output sqlServerName string = sqlServer.name
@@ -342,8 +343,7 @@ output sqlConnectionStringPrisma string = 'sqlserver://${sqlServer.properties.fu
 output storageAccountName string = storageAccount.name
 output storageConnectionString string = 'DefaultEndpointsProtocol=https;AccountName=${storageAccount.name};AccountKey=${storageAccount.listKeys().keys[0].value};EndpointSuffix=${environment().suffixes.storage}'
 output blobContainerName string = blobContainer.name
-output functionAppName string = functionApp.name
-output functionAppUrl string = 'https://${functionApp.properties.defaultHostName}'
+// output functionAppName string = functionApp.name
+// output functionAppUrl string = 'https://${functionApp.properties.defaultHostName}'
 output appInsightsName string = appInsights.name
 output appInsightsInstrumentationKey string = appInsights.properties.InstrumentationKey
-

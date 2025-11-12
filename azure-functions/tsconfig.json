@@ -3,21 +3,30 @@
     "module": "commonjs",
     "target": "ES2020",
     "outDir": "dist",
-    "rootDir": ".",
+    "rootDir": "..",
     "sourceMap": true,
     "strict": false,
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
-    "moduleResolution": "node"
+    "moduleResolution": "node",
+    "baseUrl": "..",
+    "paths": {
+      "@/*": ["./*"]
+    }
   },
   "include": [
-    "**/*.ts"
+    "**/*.ts",
+    "../lib/**/*.ts",
+    "../types/**/*.ts"
   ],
   "exclude": [
     "node_modules",
-    "dist"
+    "dist",
+    "app",
+    "components",
+    ".next"
   ]
 }
 

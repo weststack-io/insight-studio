@@ -75,7 +75,7 @@ param nextAuthSecret string
 param nextAuthUrl string = 'http://localhost:3000'
 
 // Storage Account for Function App Runtime
-resource functionStorageAccount 'Microsoft.Storage/storageAccounts@2023-01-01' = {
+resource functionStorageAccount 'Microsoft.Storage/storageAccounts@2025-01-01' = {
   name: functionStorageAccountName
   location: location
   kind: 'StorageV2'
@@ -84,10 +84,17 @@ resource functionStorageAccount 'Microsoft.Storage/storageAccounts@2023-01-01' =
   }
   properties: {
     supportsHttpsTrafficOnly: true
-    minimumTlsVersion: 'TLS1_2'
+    defaultToOAuthAuthentication: false
+    accessTier: 'Hot'
     allowBlobPublicAccess: false
     allowSharedKeyAccess: true
-    defaultToOAuthAuthentication: false
+    dnsEndpointType: 'Standard'
+    minimumTlsVersion: 'TLS1_2'
+    networkAcls: {
+      bypass: 'AzureServices'
+      defaultAction: 'Allow'
+    }
+    publicNetworkAccess: 'Enabled'
   }
 }
 
@@ -112,10 +119,11 @@ var appInsightsConnectionString = 'InstrumentationKey=${appInsights.properties.I
 resource appServicePlan 'Microsoft.Web/serverfarms@2024-11-01' = {
   name: '${functionAppName}-plan'
   location: location
-  kind: 'functionapp'
+  kind: 'linux'
   sku: {
-    name: 'Y1'
-    tier: 'Dynamic'
+    name: 'P1v3'
+    tier: 'PremiumV3'
+    capacity: 1
   }
   properties: {
     reserved: true // Required for Linux consumption plans
@@ -123,7 +131,7 @@ resource appServicePlan 'Microsoft.Web/serverfarms@2024-11-01' = {
 }
 
 // Function App
-resource functionApp 'Microsoft.Web/sites@2025-03-01' = {
+resource functionApp 'Microsoft.Web/sites@2024-11-01' = {
   name: functionAppName
   location: location
   kind: 'functionapp,linux'
@@ -131,7 +139,7 @@ resource functionApp 'Microsoft.Web/sites@2025-03-01' = {
     serverFarmId: appServicePlan.id
     siteConfig: {
       linuxFxVersion: 'NODE|${nodeVersion}'
-      alwaysOn: false // Consumption plan doesn't support always on
+      alwaysOn: true // Consumption plan doesn't support always on
       http20Enabled: true
       minTlsVersion: '1.2'
       ftpsState: 'Disabled'
@@ -247,5 +255,3 @@ output functionAppUrl string = 'https://${functionApp.properties.defaultHostName
 output appInsightsName string = appInsights.name
 output appInsightsInstrumentationKey string = appInsights.properties.InstrumentationKey
 output functionStorageAccountName string = functionStorageAccount.name
-
-
