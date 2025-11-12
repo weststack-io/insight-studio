@@ -1,0 +1,49 @@
+{
+  "name": "insightstudio",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "db:generate": "prisma generate",
+    "db:push": "prisma db push",
+    "db:migrate": "prisma migrate dev",
+    "db:studio": "prisma studio"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@auth/prisma-adapter": "^2.11.1",
+    "@azure/functions": "^4.9.0",
+    "@azure/msal-browser": "^4.26.1",
+    "@azure/msal-react": "^3.0.21",
+    "@azure/openai": "^2.0.0",
+    "@azure/search-documents": "^12.2.0",
+    "@azure/storage-blob": "^12.29.1",
+    "@prisma/client": "^6.19.0",
+    "@tanstack/react-query": "^5.90.7",
+    "@types/node": "^24.10.0",
+    "@types/react": "^19.2.2",
+    "@types/react-dom": "^19.2.2",
+    "axios": "^1.13.2",
+    "date-fns": "^4.1.0",
+    "next": "^16.0.1",
+    "next-auth": "^4.24.13",
+    "openai": "^6.8.1",
+    "prisma": "^6.19.0",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "typescript": "^5.9.3",
+    "zustand": "^5.0.8"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.1.17",
+    "autoprefixer": "^10.4.21",
+    "postcss": "^8.5.6",
+    "tailwindcss": "^4.1.17"
+  }
+}
