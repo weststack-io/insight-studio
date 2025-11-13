@@ -45,15 +45,15 @@ export default function DashboardPage() {
 
   if (!session) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-gray-50 to-gray-100">
+      <div className="min-h-screen flex items-center justify-center bg-light">
         <div className="text-center max-w-md w-full mx-4">
-          <div className="bg-white rounded-2xl shadow-xl p-8">
+          <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
             <p className="text-gray-600 mb-6 text-lg">
               Please sign in to continue
             </p>
             <Link
               href="/login"
-              className="inline-block px-8 py-3 bg-primary text-white rounded-lg hover:opacity-90 transition-opacity font-medium shadow-md hover:shadow-lg"
+              className="inline-block px-8 py-3 bg-accent text-white rounded-lg hover:opacity-90 transition-all font-medium shadow-lg hover:shadow-xl hover:scale-105"
             >
               Sign In
             </Link>
@@ -67,40 +67,40 @@ export default function DashboardPage() {
   const tenant = user.tenant;
 
   return (
-    <div className="min-h-screen bg-linear-to-br from-gray-50 to-gray-100">
+    <div className="min-h-screen bg-light">
       {/* Navigation */}
-      <nav className="bg-white/80 backdrop-blur-sm border-b border-gray-200/50 sticky top-0 z-50 shadow-sm">
+      <nav className="bg-white/90 backdrop-blur-md border-b border-gray-200/60 sticky top-0 z-50 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center gap-8 lg:gap-12">
               <Link
                 href="/dashboard"
-                className="text-xl sm:text-2xl font-bold text-primary hover:opacity-80 transition-opacity"
+                className="text-xl sm:text-2xl font-bold text-dark hover:text-accent transition-colors"
               >
                 {tenant?.name || "Insight Studio"}
               </Link>
               <nav className="hidden md:flex items-center gap-1">
                 <Link
                   href="/dashboard"
-                  className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-primary hover:bg-gray-50 rounded-lg transition-colors"
+                  className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-accent hover:bg-accent/5 rounded-lg transition-all"
                 >
                   Dashboard
                 </Link>
                 <Link
                   href="/briefings"
-                  className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-primary hover:bg-gray-50 rounded-lg transition-colors"
+                  className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-accent hover:bg-accent/5 rounded-lg transition-all"
                 >
                   Briefings
                 </Link>
                 <Link
                   href="/explainers"
-                  className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-primary hover:bg-gray-50 rounded-lg transition-colors"
+                  className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-accent hover:bg-accent/5 rounded-lg transition-all"
                 >
                   Explainers
                 </Link>
                 <Link
                   href="/lessons"
-                  className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-primary hover:bg-gray-50 rounded-lg transition-colors"
+                  className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-accent hover:bg-accent/5 rounded-lg transition-all"
                 >
                   Lessons
                 </Link>
@@ -112,7 +112,7 @@ export default function DashboardPage() {
               </span>
               <button
                 onClick={() => signOut()}
-                className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-primary hover:bg-gray-50 rounded-lg transition-colors"
+                className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-accent hover:bg-accent/5 rounded-lg transition-all"
               >
                 Sign Out
               </button>
@@ -123,34 +123,34 @@ export default function DashboardPage() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-12">
         {/* Tabs */}
-        <div className="mb-8 border-b border-gray-200">
+        <div className="mb-8 border-b border-gray-200/60">
           <div className="flex gap-1 sm:gap-2 overflow-x-auto -mb-px justify-center">
             <button
               onClick={() => setActiveTab("feed")}
-              className={`px-4 sm:px-6 py-3 font-medium text-sm sm:text-base whitespace-nowrap transition-colors border-b-2 ${
+              className={`px-4 sm:px-6 py-3 font-medium text-sm sm:text-base whitespace-nowrap transition-all border-b-2 ${
                 activeTab === "feed"
-                  ? "text-primary border-primary"
-                  : "text-gray-500 border-transparent hover:text-gray-700 hover:border-gray-300"
+                  ? "text-accent border-accent"
+                  : "text-gray-500 border-transparent hover:text-accent hover:border-gray-300"
               }`}
             >
               Personalized Feed
             </button>
             <button
               onClick={() => setActiveTab("preferences")}
-              className={`px-4 sm:px-6 py-3 font-medium text-sm sm:text-base whitespace-nowrap transition-colors border-b-2 ${
+              className={`px-4 sm:px-6 py-3 font-medium text-sm sm:text-base whitespace-nowrap transition-all border-b-2 ${
                 activeTab === "preferences"
-                  ? "text-primary border-primary"
-                  : "text-gray-500 border-transparent hover:text-gray-700 hover:border-gray-300"
+                  ? "text-accent border-accent"
+                  : "text-gray-500 border-transparent hover:text-accent hover:border-gray-300"
               }`}
             >
               Preferences
             </button>
             <button
               onClick={() => setActiveTab("profile")}
-              className={`px-4 sm:px-6 py-3 font-medium text-sm sm:text-base whitespace-nowrap transition-colors border-b-2 ${
+              className={`px-4 sm:px-6 py-3 font-medium text-sm sm:text-base whitespace-nowrap transition-all border-b-2 ${
                 activeTab === "profile"
-                  ? "text-primary border-primary"
-                  : "text-gray-500 border-transparent hover:text-gray-700 hover:border-gray-300"
+                  ? "text-accent border-accent"
+                  : "text-gray-500 border-transparent hover:text-accent hover:border-gray-300"
               }`}
             >
               Profile
@@ -164,8 +164,8 @@ export default function DashboardPage() {
             {loading ? (
               <div className="flex items-center justify-center py-24">
                 <div className="text-center">
-                  <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent mb-4"></div>
-                  <p className="text-gray-500 text-lg">
+                  <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-accent border-t-transparent mb-4"></div>
+                  <p className="text-gray-600 text-lg">
                     Loading personalized content...
                   </p>
                 </div>
@@ -174,8 +174,8 @@ export default function DashboardPage() {
               <div className="space-y-8 lg:space-y-12 max-w-5xl mx-auto">
                 {/* Recommended Topics */}
                 {content.recommendedTopics.length > 0 && (
-                  <section className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 lg:p-8">
-                    <h2 className="text-xl lg:text-2xl font-semibold text-gray-900 mb-6 text-center">
+                  <section className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 lg:p-8">
+                    <h2 className="text-xl lg:text-2xl font-semibold text-dark mb-6 text-center">
                       Recommended Topics
                     </h2>
                     <div className="flex flex-wrap gap-3 justify-center">
@@ -185,7 +185,7 @@ export default function DashboardPage() {
                           href={`/explainers?topic=${encodeURIComponent(
                             topic
                           )}`}
-                          className="px-4 py-2 bg-secondary text-white rounded-full hover:opacity-90 transition-opacity text-sm font-medium shadow-sm hover:shadow-md"
+                          className="px-4 py-2 bg-accent text-white rounded-full hover:opacity-90 hover:scale-105 transition-all text-sm font-medium shadow-md hover:shadow-lg"
                         >
                           {topic}
                         </Link>
@@ -198,7 +198,7 @@ export default function DashboardPage() {
                 {content.briefings.length > 0 && (
                   <section>
                     <div className="flex items-center justify-center mb-6">
-                      <h2 className="text-2xl lg:text-3xl font-bold text-gray-900">
+                      <h2 className="text-2xl lg:text-3xl font-bold text-dark">
                         Recent Briefings
                       </h2>
                     </div>
@@ -210,7 +210,7 @@ export default function DashboardPage() {
                     <div className="mt-6 text-center">
                       <Link
                         href="/briefings"
-                        className="inline-flex items-center gap-2 text-primary hover:opacity-80 font-medium transition-opacity group"
+                        className="inline-flex items-center gap-2 text-accent hover:opacity-80 font-medium transition-all group"
                       >
                         View all briefings
                         <span className="group-hover:translate-x-1 transition-transform">
@@ -225,7 +225,7 @@ export default function DashboardPage() {
                 {content.lessons.length > 0 && (
                   <section>
                     <div className="flex items-center justify-center mb-6">
-                      <h2 className="text-2xl lg:text-3xl font-bold text-gray-900">
+                      <h2 className="text-2xl lg:text-3xl font-bold text-dark">
                         Recommended Lessons
                       </h2>
                     </div>
@@ -237,7 +237,7 @@ export default function DashboardPage() {
                     <div className="mt-6 text-center">
                       <Link
                         href="/lessons"
-                        className="inline-flex items-center gap-2 text-primary hover:opacity-80 font-medium transition-opacity group"
+                        className="inline-flex items-center gap-2 text-accent hover:opacity-80 font-medium transition-all group"
                       >
                         View all lessons
                         <span className="group-hover:translate-x-1 transition-transform">
@@ -251,11 +251,11 @@ export default function DashboardPage() {
                 {content.briefings.length === 0 &&
                   content.lessons.length === 0 &&
                   content.recommendedTopics.length === 0 && (
-                    <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-12 lg:p-16 text-center">
+                    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-12 lg:p-16 text-center">
                       <div className="max-w-md mx-auto">
-                        <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <div className="w-16 h-16 bg-accent/10 rounded-full flex items-center justify-center mx-auto mb-4">
                           <svg
-                            className="w-8 h-8 text-gray-400"
+                            className="w-8 h-8 text-accent"
                             fill="none"
                             stroke="currentColor"
                             viewBox="0 0 24 24"
@@ -268,7 +268,7 @@ export default function DashboardPage() {
                             />
                           </svg>
                         </div>
-                        <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                        <h3 className="text-lg font-semibold text-dark mb-2">
                           No personalized content yet
                         </h3>
                         <p className="text-gray-600 mb-6">
@@ -277,7 +277,7 @@ export default function DashboardPage() {
                         </p>
                         <button
                           onClick={() => setActiveTab("preferences")}
-                          className="inline-block px-6 py-3 bg-primary text-white rounded-lg hover:opacity-90 transition-opacity font-medium shadow-md hover:shadow-lg"
+                          className="inline-block px-6 py-3 bg-accent text-white rounded-lg hover:opacity-90 hover:scale-105 transition-all font-medium shadow-lg hover:shadow-xl"
                         >
                           Set Preferences
                         </button>
@@ -286,7 +286,7 @@ export default function DashboardPage() {
                   )}
               </div>
             ) : (
-              <div className="bg-white rounded-xl shadow-sm border border-red-200 p-12 text-center">
+              <div className="bg-white rounded-xl shadow-sm border border-red-100 p-12 text-center">
                 <div className="max-w-md mx-auto">
                   <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-4">
                     <svg
@@ -303,7 +303,7 @@ export default function DashboardPage() {
                       />
                     </svg>
                   </div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                  <h3 className="text-lg font-semibold text-dark mb-2">
                     Failed to load content
                   </h3>
                   <p className="text-gray-600 mb-6">
@@ -312,7 +312,7 @@ export default function DashboardPage() {
                   </p>
                   <button
                     onClick={() => fetchPersonalizedContent()}
-                    className="inline-block px-6 py-3 bg-primary text-white rounded-lg hover:opacity-90 transition-opacity font-medium shadow-md hover:shadow-lg"
+                    className="inline-block px-6 py-3 bg-accent text-white rounded-lg hover:opacity-90 hover:scale-105 transition-all font-medium shadow-lg hover:shadow-xl"
                   >
                     Retry
                   </button>
@@ -324,7 +324,7 @@ export default function DashboardPage() {
 
         {activeTab === "preferences" && (
           <div className="max-w-4xl mx-auto">
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 lg:p-8">
+            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 lg:p-8">
               <PreferenceSelector
                 onPreferencesChange={() => fetchPersonalizedContent()}
               />
@@ -334,8 +334,8 @@ export default function DashboardPage() {
 
         {activeTab === "profile" && (
           <div className="max-w-4xl mx-auto">
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 lg:p-8">
-              <h2 className="text-2xl lg:text-3xl font-bold text-gray-900 mb-8 text-center">
+            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 lg:p-8">
+              <h2 className="text-2xl lg:text-3xl font-bold text-dark mb-8 text-center">
                 Profile Settings
               </h2>
               <div className="space-y-6 max-w-2xl mx-auto">
@@ -357,7 +357,7 @@ export default function DashboardPage() {
                   </label>
                   <select
                     defaultValue={user.language || "en"}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all bg-white"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent transition-all bg-white"
                   >
                     <option value="en">English</option>
                     <option value="es">Spanish</option>
@@ -374,7 +374,7 @@ export default function DashboardPage() {
                   </label>
                   <select
                     defaultValue={user.generation || ""}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all bg-white"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent transition-all bg-white"
                   >
                     <option value="">Not specified</option>
                     <option value="GenX">Gen X</option>
@@ -390,7 +390,7 @@ export default function DashboardPage() {
                   </label>
                   <select
                     defaultValue={user.sophisticationLevel || ""}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all bg-white"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent transition-all bg-white"
                   >
                     <option value="">Not specified</option>
                     <option value="beginner">Beginner</option>
