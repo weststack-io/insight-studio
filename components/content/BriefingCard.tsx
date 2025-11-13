@@ -11,60 +11,87 @@ export function BriefingCard({ briefing }: BriefingCardProps) {
   const content = JSON.parse(briefing.content);
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-6 mb-4">
-      <div className="flex justify-between items-start mb-4">
-        <div>
-          <h3 className="text-xl font-bold text-primary mb-2">
+    <article className="bg-white rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition-shadow p-6 lg:p-8">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 mb-6">
+        <div className="flex-1">
+          <h3 className="text-xl lg:text-2xl font-bold text-gray-900 mb-2">
             {content.title || `${briefing.type} Briefing`}
           </h3>
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-gray-500 flex items-center gap-2">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
             {format(new Date(briefing.weekStartDate), 'MMMM d, yyyy')}
           </p>
         </div>
-        <span className="px-3 py-1 text-xs font-semibold rounded-full bg-secondary text-white">
+        <span className="inline-flex items-center px-3 py-1.5 text-xs font-semibold rounded-full bg-secondary text-white shadow-sm self-start sm:self-auto">
           {briefing.type}
         </span>
       </div>
 
       {content.summary && (
-        <p className="text-gray-700 mb-4">{content.summary}</p>
+        <p className="text-gray-700 mb-6 leading-relaxed">{content.summary}</p>
       )}
 
       {content.sections && content.sections.length > 0 && (
-        <div className="space-y-4 mb-4">
+        <div className="space-y-5 mb-6">
           {content.sections.map((section: any, index: number) => (
-            <div key={index}>
-              <h4 className="font-semibold text-primary mb-2">
+            <div key={index} className="pb-5 border-b border-gray-100 last:border-0 last:pb-0">
+              <h4 className="font-semibold text-gray-900 mb-2 text-lg">
                 {section.heading}
               </h4>
-              <p className="text-gray-600 text-sm">{section.content}</p>
+              <p className="text-gray-600 leading-relaxed">{section.content}</p>
             </div>
           ))}
         </div>
       )}
 
       {content.keyTakeaways && content.keyTakeaways.length > 0 && (
-        <div className="mt-4 pt-4 border-t border-gray-200">
-          <h4 className="font-semibold text-primary mb-2">Key Takeaways</h4>
-          <ul className="list-disc list-inside space-y-1 text-sm text-gray-600">
+        <div className="mt-6 pt-6 border-t border-gray-200">
+          <h4 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+            <svg className="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            Key Takeaways
+          </h4>
+          <ul className="space-y-2">
             {content.keyTakeaways.map((takeaway: string, index: number) => (
-              <li key={index}>{takeaway}</li>
+              <li key={index} className="flex items-start gap-3 text-gray-700">
+                <span className="text-primary mt-1.5 flex-shrink-0">
+                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                  </svg>
+                </span>
+                <span className="flex-1">{takeaway}</span>
+              </li>
             ))}
           </ul>
         </div>
       )}
 
       {content.nextSteps && content.nextSteps.length > 0 && (
-        <div className="mt-4 pt-4 border-t border-gray-200">
-          <h4 className="font-semibold text-primary mb-2">Next Steps</h4>
-          <ul className="list-disc list-inside space-y-1 text-sm text-gray-600">
+        <div className="mt-6 pt-6 border-t border-gray-200">
+          <h4 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+            <svg className="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+            </svg>
+            Next Steps
+          </h4>
+          <ul className="space-y-2">
             {content.nextSteps.map((step: string, index: number) => (
-              <li key={index}>{step}</li>
+              <li key={index} className="flex items-start gap-3 text-gray-700">
+                <span className="text-primary mt-1.5 flex-shrink-0">
+                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clipRule="evenodd" />
+                  </svg>
+                </span>
+                <span className="flex-1">{step}</span>
+              </li>
             ))}
           </ul>
         </div>
       )}
-    </div>
+    </article>
   );
 }
 

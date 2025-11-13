@@ -276,3 +276,4 @@ echo "2. Verify the function is running in the Azure Portal"
 echo ""
 
 
+

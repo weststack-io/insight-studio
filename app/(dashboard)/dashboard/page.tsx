@@ -45,15 +45,19 @@ export default function DashboardPage() {
 
   if (!session) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-gray-600 mb-4">Please sign in to continue</p>
-          <Link
-            href="/login"
-            className="px-6 py-2 bg-primary text-white rounded-lg hover:bg-opacity-90 cursor-pointer"
-          >
-            Sign In
-          </Link>
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100">
+        <div className="text-center max-w-md w-full mx-4">
+          <div className="bg-white rounded-2xl shadow-xl p-8">
+            <p className="text-gray-600 mb-6 text-lg">
+              Please sign in to continue
+            </p>
+            <Link
+              href="/login"
+              className="inline-block px-8 py-3 bg-primary text-white rounded-lg hover:opacity-90 transition-opacity font-medium shadow-md hover:shadow-lg"
+            >
+              Sign In
+            </Link>
+          </div>
         </div>
       </div>
     );
@@ -63,50 +67,52 @@ export default function DashboardPage() {
   const tenant = user.tenant;
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50">
       {/* Navigation */}
-      <nav className="bg-white shadow-md">
-        <div className="container mx-auto px-4">
+      <nav className="bg-white/80 backdrop-blur-sm border-b border-gray-200/50 sticky top-0 z-50 shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-            <div className="flex items-center gap-8">
+            <div className="flex items-center gap-8 lg:gap-12">
               <Link
                 href="/dashboard"
-                className="text-2xl font-bold text-primary cursor-pointer"
+                className="text-xl sm:text-2xl font-bold text-primary hover:opacity-80 transition-opacity"
               >
                 {tenant?.name || "Insight Studio"}
               </Link>
-              <div className="flex gap-4">
+              <nav className="hidden md:flex items-center gap-1">
                 <Link
                   href="/dashboard"
-                  className="text-gray-700 hover:text-primary cursor-pointer"
+                  className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-primary hover:bg-gray-50 rounded-lg transition-colors"
                 >
                   Dashboard
                 </Link>
                 <Link
                   href="/briefings"
-                  className="text-gray-700 hover:text-primary cursor-pointer"
+                  className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-primary hover:bg-gray-50 rounded-lg transition-colors"
                 >
                   Briefings
                 </Link>
                 <Link
                   href="/explainers"
-                  className="text-gray-700 hover:text-primary cursor-pointer"
+                  className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-primary hover:bg-gray-50 rounded-lg transition-colors"
                 >
                   Explainers
                 </Link>
                 <Link
                   href="/lessons"
-                  className="text-gray-700 hover:text-primary cursor-pointer"
+                  className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-primary hover:bg-gray-50 rounded-lg transition-colors"
                 >
                   Lessons
                 </Link>
-              </div>
+              </nav>
             </div>
-            <div className="flex items-center gap-4">
-              <span className="text-gray-600">{user.email}</span>
+            <div className="flex items-center gap-3 sm:gap-4">
+              <span className="hidden sm:inline-block text-sm text-gray-600 truncate max-w-[150px] lg:max-w-none">
+                {user.email}
+              </span>
               <button
                 onClick={() => signOut()}
-                className="px-4 py-2 text-gray-700 hover:text-primary cursor-pointer"
+                className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-primary hover:bg-gray-50 rounded-lg transition-colors"
               >
                 Sign Out
               </button>
@@ -115,36 +121,36 @@ export default function DashboardPage() {
         </div>
       </nav>
 
-      <div className="container mx-auto px-4 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-12">
         {/* Tabs */}
-        <div className="mb-6 border-b border-gray-200">
-          <div className="flex gap-4">
+        <div className="mb-8 border-b border-gray-200">
+          <div className="flex gap-1 sm:gap-2 overflow-x-auto -mb-px justify-center">
             <button
               onClick={() => setActiveTab("feed")}
-              className={`px-4 py-2 font-medium cursor-pointer ${
+              className={`px-4 sm:px-6 py-3 font-medium text-sm sm:text-base whitespace-nowrap transition-colors border-b-2 ${
                 activeTab === "feed"
-                  ? "text-primary border-b-2 border-primary"
-                  : "text-gray-600 hover:text-primary"
+                  ? "text-primary border-primary"
+                  : "text-gray-500 border-transparent hover:text-gray-700 hover:border-gray-300"
               }`}
             >
               Personalized Feed
             </button>
             <button
               onClick={() => setActiveTab("preferences")}
-              className={`px-4 py-2 font-medium cursor-pointer ${
+              className={`px-4 sm:px-6 py-3 font-medium text-sm sm:text-base whitespace-nowrap transition-colors border-b-2 ${
                 activeTab === "preferences"
-                  ? "text-primary border-b-2 border-primary"
-                  : "text-gray-600 hover:text-primary"
+                  ? "text-primary border-primary"
+                  : "text-gray-500 border-transparent hover:text-gray-700 hover:border-gray-300"
               }`}
             >
               Preferences
             </button>
             <button
               onClick={() => setActiveTab("profile")}
-              className={`px-4 py-2 font-medium cursor-pointer ${
+              className={`px-4 sm:px-6 py-3 font-medium text-sm sm:text-base whitespace-nowrap transition-colors border-b-2 ${
                 activeTab === "profile"
-                  ? "text-primary border-b-2 border-primary"
-                  : "text-gray-600 hover:text-primary"
+                  ? "text-primary border-primary"
+                  : "text-gray-500 border-transparent hover:text-gray-700 hover:border-gray-300"
               }`}
             >
               Profile
@@ -156,177 +162,254 @@ export default function DashboardPage() {
         {activeTab === "feed" && (
           <div>
             {loading ? (
-              <div className="text-center py-12 text-gray-500">
-                Loading personalized content...
+              <div className="flex items-center justify-center py-24">
+                <div className="text-center">
+                  <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent mb-4"></div>
+                  <p className="text-gray-500 text-lg">
+                    Loading personalized content...
+                  </p>
+                </div>
               </div>
             ) : content ? (
-              <div className="space-y-8">
+              <div className="space-y-8 lg:space-y-12 max-w-5xl mx-auto">
                 {/* Recommended Topics */}
                 {content.recommendedTopics.length > 0 && (
-                  <div className="bg-white rounded-lg shadow-md p-6">
-                    <h2 className="text-xl font-semibold text-primary mb-4">
+                  <section className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 lg:p-8">
+                    <h2 className="text-xl lg:text-2xl font-semibold text-gray-900 mb-6 text-center">
                       Recommended Topics
                     </h2>
-                    <div className="flex flex-wrap gap-2">
+                    <div className="flex flex-wrap gap-3 justify-center">
                       {content.recommendedTopics.map((topic, index) => (
                         <Link
                           key={index}
                           href={`/explainers?topic=${encodeURIComponent(
                             topic
                           )}`}
-                          className="px-4 py-2 bg-secondary text-white rounded-full hover:bg-opacity-80 cursor-pointer"
+                          className="px-4 py-2 bg-secondary text-white rounded-full hover:opacity-90 transition-opacity text-sm font-medium shadow-sm hover:shadow-md"
                         >
                           {topic}
                         </Link>
                       ))}
                     </div>
-                  </div>
+                  </section>
                 )}
 
                 {/* Recent Briefings */}
                 {content.briefings.length > 0 && (
-                  <div>
-                    <h2 className="text-2xl font-bold text-primary mb-4">
-                      Recent Briefings
-                    </h2>
-                    {content.briefings.map((briefing) => (
-                      <BriefingCard key={briefing.id} briefing={briefing} />
-                    ))}
-                    <div className="mt-4">
+                  <section>
+                    <div className="flex items-center justify-center mb-6">
+                      <h2 className="text-2xl lg:text-3xl font-bold text-gray-900">
+                        Recent Briefings
+                      </h2>
+                    </div>
+                    <div className="space-y-4 lg:space-y-6">
+                      {content.briefings.map((briefing) => (
+                        <BriefingCard key={briefing.id} briefing={briefing} />
+                      ))}
+                    </div>
+                    <div className="mt-6 text-center">
                       <Link
                         href="/briefings"
-                        className="text-primary hover:underline cursor-pointer"
+                        className="inline-flex items-center gap-2 text-primary hover:opacity-80 font-medium transition-opacity group"
                       >
-                        View all briefings →
+                        View all briefings
+                        <span className="group-hover:translate-x-1 transition-transform">
+                          →
+                        </span>
                       </Link>
                     </div>
-                  </div>
+                  </section>
                 )}
 
                 {/* Recommended Lessons */}
                 {content.lessons.length > 0 && (
-                  <div>
-                    <h2 className="text-2xl font-bold text-primary mb-4">
-                      Recommended Lessons
-                    </h2>
-                    {content.lessons.map((lesson) => (
-                      <LessonView key={lesson.id} lesson={lesson} />
-                    ))}
-                    <div className="mt-4">
+                  <section>
+                    <div className="flex items-center justify-center mb-6">
+                      <h2 className="text-2xl lg:text-3xl font-bold text-gray-900">
+                        Recommended Lessons
+                      </h2>
+                    </div>
+                    <div className="space-y-4 lg:space-y-6">
+                      {content.lessons.map((lesson) => (
+                        <LessonView key={lesson.id} lesson={lesson} />
+                      ))}
+                    </div>
+                    <div className="mt-6 text-center">
                       <Link
                         href="/lessons"
-                        className="text-primary hover:underline cursor-pointer"
+                        className="inline-flex items-center gap-2 text-primary hover:opacity-80 font-medium transition-opacity group"
                       >
-                        View all lessons →
+                        View all lessons
+                        <span className="group-hover:translate-x-1 transition-transform">
+                          →
+                        </span>
                       </Link>
                     </div>
-                  </div>
+                  </section>
                 )}
 
                 {content.briefings.length === 0 &&
                   content.lessons.length === 0 &&
                   content.recommendedTopics.length === 0 && (
-                    <div className="text-center py-12 text-gray-500">
-                      <p className="mb-4">No personalized content yet.</p>
-                      <p>
-                        Set your preferences and generate some content to get
-                        started.
-                      </p>
+                    <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-12 lg:p-16 text-center">
+                      <div className="max-w-md mx-auto">
+                        <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                          <svg
+                            className="w-8 h-8 text-gray-400"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                            />
+                          </svg>
+                        </div>
+                        <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                          No personalized content yet
+                        </h3>
+                        <p className="text-gray-600 mb-6">
+                          Set your preferences and generate some content to get
+                          started.
+                        </p>
+                        <button
+                          onClick={() => setActiveTab("preferences")}
+                          className="inline-block px-6 py-3 bg-primary text-white rounded-lg hover:opacity-90 transition-opacity font-medium shadow-md hover:shadow-lg"
+                        >
+                          Set Preferences
+                        </button>
+                      </div>
                     </div>
                   )}
               </div>
             ) : (
-              <div className="text-center py-12 text-gray-500">
-                Failed to load personalized content.
+              <div className="bg-white rounded-xl shadow-sm border border-red-200 p-12 text-center">
+                <div className="max-w-md mx-auto">
+                  <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <svg
+                      className="w-8 h-8 text-red-500"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
+                    </svg>
+                  </div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                    Failed to load content
+                  </h3>
+                  <p className="text-gray-600 mb-6">
+                    There was an error loading your personalized content. Please
+                    try refreshing the page.
+                  </p>
+                  <button
+                    onClick={() => fetchPersonalizedContent()}
+                    className="inline-block px-6 py-3 bg-primary text-white rounded-lg hover:opacity-90 transition-opacity font-medium shadow-md hover:shadow-lg"
+                  >
+                    Retry
+                  </button>
+                </div>
               </div>
             )}
           </div>
         )}
 
         {activeTab === "preferences" && (
-          <div>
-            <PreferenceSelector
-              onPreferencesChange={() => fetchPersonalizedContent()}
-            />
+          <div className="max-w-4xl mx-auto">
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 lg:p-8">
+              <PreferenceSelector
+                onPreferencesChange={() => fetchPersonalizedContent()}
+              />
+            </div>
           </div>
         )}
 
         {activeTab === "profile" && (
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <h2 className="text-2xl font-bold text-primary mb-6">
-              Profile Settings
-            </h2>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Email
-                </label>
-                <input
-                  type="email"
-                  value={user.email || ""}
-                  disabled
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50"
-                />
-              </div>
+          <div className="max-w-4xl mx-auto">
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 lg:p-8">
+              <h2 className="text-2xl lg:text-3xl font-bold text-gray-900 mb-8 text-center">
+                Profile Settings
+              </h2>
+              <div className="space-y-6 max-w-2xl mx-auto">
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Email
+                  </label>
+                  <input
+                    type="email"
+                    value={user.email || ""}
+                    disabled
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-600 cursor-not-allowed"
+                  />
+                </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Language
-                </label>
-                <select
-                  defaultValue={user.language || "en"}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                >
-                  <option value="en">English</option>
-                  <option value="es">Spanish</option>
-                  <option value="fr">French</option>
-                  <option value="de">German</option>
-                  <option value="zh">Chinese</option>
-                  <option value="ja">Japanese</option>
-                </select>
-              </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Language
+                  </label>
+                  <select
+                    defaultValue={user.language || "en"}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all bg-white"
+                  >
+                    <option value="en">English</option>
+                    <option value="es">Spanish</option>
+                    <option value="fr">French</option>
+                    <option value="de">German</option>
+                    <option value="zh">Chinese</option>
+                    <option value="ja">Japanese</option>
+                  </select>
+                </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Generation
-                </label>
-                <select
-                  defaultValue={user.generation || ""}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                >
-                  <option value="">Not specified</option>
-                  <option value="GenX">Gen X</option>
-                  <option value="Millennial">Millennial</option>
-                  <option value="GenZ">Gen Z</option>
-                  <option value="Boomer">Boomer</option>
-                </select>
-              </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Generation
+                  </label>
+                  <select
+                    defaultValue={user.generation || ""}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all bg-white"
+                  >
+                    <option value="">Not specified</option>
+                    <option value="GenX">Gen X</option>
+                    <option value="Millennial">Millennial</option>
+                    <option value="GenZ">Gen Z</option>
+                    <option value="Boomer">Boomer</option>
+                  </select>
+                </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Investment Sophistication Level
-                </label>
-                <select
-                  defaultValue={user.sophisticationLevel || ""}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                >
-                  <option value="">Not specified</option>
-                  <option value="beginner">Beginner</option>
-                  <option value="intermediate">Intermediate</option>
-                  <option value="advanced">Advanced</option>
-                </select>
-              </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Investment Sophistication Level
+                  </label>
+                  <select
+                    defaultValue={user.sophisticationLevel || ""}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all bg-white"
+                  >
+                    <option value="">Not specified</option>
+                    <option value="beginner">Beginner</option>
+                    <option value="intermediate">Intermediate</option>
+                    <option value="advanced">Advanced</option>
+                  </select>
+                </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Role
-                </label>
-                <input
-                  type="text"
-                  value={user.role || ""}
-                  disabled
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50"
-                />
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Role
+                  </label>
+                  <input
+                    type="text"
+                    value={user.role || ""}
+                    disabled
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-600 cursor-not-allowed"
+                  />
+                </div>
               </div>
             </div>
           </div>

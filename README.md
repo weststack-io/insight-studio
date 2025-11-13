@@ -86,3 +86,13 @@ See [infrastructure/](infrastructure/) directory for Bicep templates and deploym
 ## Environment Variables
 
 See [SETUP.md](SETUP.md) for a complete list of required environment variables.
+
+## Theme Configuration
+
+Insight Studio supports multi-tenant white-label branding. Each tenant can have custom colors, fonts, and logos that are automatically applied based on domain.
+
+See [docs/THEME_CONFIGURATION.md](docs/THEME_CONFIGURATION.md) for detailed documentation on:
+- How the theme system works
+- Adding and configuring themes
+- Available CSS variables and utility classes
+- Best practices and troubleshooting

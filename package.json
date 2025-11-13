@@ -11,7 +11,8 @@
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
     "db:migrate": "prisma migrate dev",
-    "db:studio": "prisma studio"
+    "db:studio": "prisma studio",
+    "theme:add-weststack": "npx tsx scripts/add-weststack-theme.ts"
   },
   "keywords": [],
   "author": "",
