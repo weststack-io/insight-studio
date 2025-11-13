@@ -26,6 +26,7 @@
     "@azure/search-documents": "^12.2.0",
     "@azure/storage-blob": "^12.29.1",
     "@prisma/client": "^6.19.0",
+    "@tabler/icons-react": "^3.35.0",
     "@tanstack/react-query": "^5.90.7",
     "@types/node": "^24.10.0",
     "@types/react": "^19.2.2",
