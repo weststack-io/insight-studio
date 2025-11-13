@@ -27,7 +27,7 @@ body {
   background: #ffffff;
 }
 
-/* Branding utilities - using CSS variables for theme support */
+/* Branding utilities - using static CSS variables */
 .bg-primary {
   background-color: var(--color-primary);
 }
