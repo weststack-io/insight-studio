@@ -1,22 +1,22 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth/config';
-import { prisma } from '@/lib/db/client';
-import { generateBriefing } from '@/lib/ai/generators';
-import { getAddeparClient } from '@/lib/addepar/client';
-import { BriefingType } from '@/types';
+import { NextRequest, NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth/config";
+import { prisma } from "@/lib/db/client";
+import { generateBriefing } from "@/lib/ai/generators";
+import { getAddeparClient } from "@/lib/addepar/client";
+import { BriefingType } from "@/types";
 
 export async function GET(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const userId = (session.user as any).id;
     const searchParams = request.nextUrl.searchParams;
-    const type = searchParams.get('type') as BriefingType | null;
-    const weekStart = searchParams.get('weekStart');
+    const type = searchParams.get("type") as BriefingType | null;
+    const weekStart = searchParams.get("weekStart");
 
     const where: any = {
       userId,
@@ -33,16 +33,16 @@ export async function GET(request: NextRequest) {
     const briefings = await prisma.briefing.findMany({
       where,
       orderBy: {
-        weekStartDate: 'desc',
+        weekStartDate: "desc",
       },
       take: 10,
     });
 
     return NextResponse.json({ briefings });
   } catch (error) {
-    console.error('Failed to fetch briefings:', error);
+    console.error("Failed to fetch briefings:", error);
     return NextResponse.json(
-      { error: 'Failed to fetch briefings' },
+      { error: "Failed to fetch briefings" },
       { status: 500 }
     );
   }
@@ -52,7 +52,7 @@ export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const user = session.user as any;
@@ -70,12 +70,12 @@ export async function POST(request: NextRequest) {
     });
 
     if (!dbUser) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
     // Get portfolio data if portfolio briefing
     let portfolioData;
-    if (type === 'portfolio') {
+    if (type === "portfolio") {
       // For MVP, we'll need to store Addepar entity ID in user profile or preferences
       // For now, we'll try to fetch if available
       try {
@@ -85,7 +85,7 @@ export async function POST(request: NextRequest) {
           portfolioData = await addeparClient.getPortfolioData(addeparEntityId);
         }
       } catch (error) {
-        console.error('Failed to fetch portfolio data:', error);
+        console.error("Failed to fetch portfolio data:", error);
       }
     }
 
@@ -96,7 +96,7 @@ export async function POST(request: NextRequest) {
       language: dbUser.language as any,
       generation: dbUser.generation as any,
       sophisticationLevel: dbUser.sophisticationLevel as any,
-      userPreferences: dbUser.userPreferences.map(p => p.topic),
+      userPreferences: dbUser.userPreferences.map((p) => p.topic),
     });
 
     // Calculate week start date (Monday of current week)
@@ -119,11 +119,59 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ briefing });
   } catch (error) {
-    console.error('Failed to generate briefing:', error);
+    console.error("Failed to generate briefing:", error);
     return NextResponse.json(
-      { error: 'Failed to generate briefing' },
+      { error: "Failed to generate briefing" },
       { status: 500 }
     );
   }
 }
 
+export async function DELETE(request: NextRequest) {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session?.user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const userId = (session.user as any).id;
+    const searchParams = request.nextUrl.searchParams;
+    const briefingId = searchParams.get("id");
+
+    if (!briefingId) {
+      return NextResponse.json(
+        { error: "Briefing ID is required" },
+        { status: 400 }
+      );
+    }
+
+    // Verify the briefing belongs to the user
+    const briefing = await prisma.briefing.findUnique({
+      where: { id: briefingId },
+    });
+
+    if (!briefing) {
+      return NextResponse.json(
+        { error: "Briefing not found" },
+        { status: 404 }
+      );
+    }
+
+    if (briefing.userId !== userId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+    }
+
+    // Delete the briefing
+    await prisma.briefing.delete({
+      where: { id: briefingId },
+    });
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error("Failed to delete briefing:", error);
+    return NextResponse.json(
+      { error: "Failed to delete briefing" },
+      { status: 500 }
+    );
+  }
+}

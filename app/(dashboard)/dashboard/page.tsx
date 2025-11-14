@@ -44,6 +44,24 @@ export default function DashboardPage() {
     }
   };
 
+  const handleDeleteBriefing = async (briefingId: string) => {
+    try {
+      const response = await fetch(`/api/briefings?id=${briefingId}`, {
+        method: "DELETE",
+      });
+
+      if (response.ok) {
+        await fetchPersonalizedContent();
+      } else {
+        const data = await response.json();
+        throw new Error(data.error || "Failed to delete briefing");
+      }
+    } catch (error) {
+      console.error("Failed to delete briefing:", error);
+      throw error;
+    }
+  };
+
   if (!session) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-light">
@@ -157,7 +175,11 @@ export default function DashboardPage() {
                       </div>
                       <div className="flex flex-col gap-4 lg:gap-6">
                         {content.briefings.map((briefing) => (
-                          <BriefingCard key={briefing.id} briefing={briefing} />
+                          <BriefingCard
+                            key={briefing.id}
+                            briefing={briefing}
+                            onDelete={handleDeleteBriefing}
+                          />
                         ))}
                       </div>
                       <div className="mt-6 lg:mt-8 flex justify-center">

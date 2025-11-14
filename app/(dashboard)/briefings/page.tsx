@@ -54,6 +54,24 @@ export default function BriefingsPage() {
     }
   };
 
+  const handleDeleteBriefing = async (briefingId: string) => {
+    try {
+      const response = await fetch(`/api/briefings?id=${briefingId}`, {
+        method: "DELETE",
+      });
+
+      if (response.ok) {
+        await fetchBriefings();
+      } else {
+        const data = await response.json();
+        throw new Error(data.error || "Failed to delete briefing");
+      }
+    } catch (error) {
+      console.error("Failed to delete briefing:", error);
+      throw error;
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-light">
@@ -131,7 +149,11 @@ export default function BriefingsPage() {
         ) : (
           <div>
             {briefings.map((briefing) => (
-              <BriefingCard key={briefing.id} briefing={briefing} />
+              <BriefingCard 
+                key={briefing.id} 
+                briefing={briefing} 
+                onDelete={handleDeleteBriefing}
+              />
             ))}
           </div>
         )}
