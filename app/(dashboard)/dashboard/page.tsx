@@ -71,7 +71,7 @@ export default function DashboardPage() {
     <div className="min-h-screen bg-light h-screen w-screen flex flex-col">
       <Header tenant={tenant} user={user} signOut={signOut} />
       {/* Main Content Container */}
-      <main className="flex-1 flex flex-col">
+      <main className="flex-1 flex flex-col pt-16">
         <div className="mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 lg:py-12 flex-1 flex flex-col">
           {/* Tabs */}
           <div className="mb-8 lg:mb-12 border-b border-gray-200/60 shrink-0">

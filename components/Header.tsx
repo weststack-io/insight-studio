@@ -1,4 +1,4 @@
-// components/Header.jsx
+// components/Header.tsx
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { IconMenu2, IconX, IconLogout } from "@tabler/icons-react";
@@ -10,11 +10,30 @@ const NAV_ITEMS = [
   { href: "/lessons", label: "Lessons" },
 ];
 
-export default function Header({ tenant = {}, user = {}, signOut = () => {} }) {
+interface Tenant {
+  name?: string;
+}
+
+interface User {
+  name?: string;
+  email?: string;
+}
+
+interface HeaderProps {
+  tenant?: Tenant;
+  user?: User;
+  signOut?: () => void;
+}
+
+export default function Header({
+  tenant = {},
+  user = {},
+  signOut = () => {},
+}: HeaderProps) {
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
-    function onKey(e) {
+    function onKey(e: KeyboardEvent) {
       if (e.key === "Escape") setOpen(false);
     }
     window.addEventListener("keydown", onKey);
@@ -33,7 +52,7 @@ export default function Header({ tenant = {}, user = {}, signOut = () => {} }) {
           <div className="flex items-center gap-6">
             <Link href="/dashboard" className="flex items-center gap-3">
               <div
-                className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-pink-500
+                className="w-10 h-10 rounded-full bg-linear-to-br from-indigo-500 to-pink-500
                            text-white flex items-center justify-center font-bold shadow-md"
                 aria-hidden
               >
@@ -119,7 +138,7 @@ export default function Header({ tenant = {}, user = {}, signOut = () => {} }) {
         <div className="mx-auto px-4 pt-2 pb-4 border-t border-gray-200/60 bg-white/80 backdrop-blur-sm">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-full bg-gradient-to-br from-indigo-500 to-pink-500 flex items-center justify-center text-white font-semibold">
+              <div className="w-9 h-9 rounded-full bg-linear-to-br from-indigo-500 to-pink-500 flex items-center justify-center text-white font-semibold">
                 {tenant?.name?.[0] ?? "I"}
               </div>
               <div>
