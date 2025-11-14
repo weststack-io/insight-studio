@@ -2,6 +2,7 @@
 
 import { Explainer } from '@/types';
 import { useState } from 'react';
+import { MarkdownContent } from './MarkdownContent';
 
 interface ExplainerViewProps {
   explainer: Explainer;
@@ -40,11 +41,8 @@ export function ExplainerView({ explainer, onGenerate }: ExplainerViewProps) {
         <p className="text-lg text-gray-700 mb-4 italic">{content.summary}</p>
       )}
 
-      <div className="prose max-w-none mb-6">
-        <div
-          dangerouslySetInnerHTML={{ __html: content.content }}
-          className="text-gray-700"
-        />
+      <div className="mb-6">
+        <MarkdownContent content={content.content} />
       </div>
 
       {content.keyPoints && content.keyPoints.length > 0 && (

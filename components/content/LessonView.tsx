@@ -1,6 +1,7 @@
 'use client';
 
 import { Lesson } from '@/types';
+import { MarkdownContent } from './MarkdownContent';
 
 interface LessonViewProps {
   lesson: Lesson;
@@ -37,10 +38,9 @@ export function LessonView({ lesson }: LessonViewProps) {
         </div>
       </div>
 
-      <div 
-        className="mb-6 text-gray-700 leading-relaxed [&_h1]:text-2xl [&_h1]:font-bold [&_h1]:text-gray-900 [&_h1]:mb-4 [&_h1]:mt-6 [&_h2]:text-xl [&_h2]:font-semibold [&_h2]:text-gray-900 [&_h2]:mb-3 [&_h2]:mt-5 [&_h3]:text-lg [&_h3]:font-semibold [&_h3]:text-gray-900 [&_h3]:mb-2 [&_h3]:mt-4 [&_p]:mb-4 [&_a]:text-primary [&_a]:underline [&_a:hover]:opacity-80 [&_strong]:font-semibold [&_strong]:text-gray-900 [&_ul]:list-disc [&_ul]:ml-6 [&_ul]:mb-4 [&_ul]:space-y-2 [&_ol]:list-decimal [&_ol]:ml-6 [&_ol]:mb-4 [&_ol]:space-y-2 [&_li]:text-gray-700"
-        dangerouslySetInnerHTML={{ __html: content.content }}
-      />
+      <div className="mb-6">
+        <MarkdownContent content={content.content} />
+      </div>
 
       {content.keyTakeaways && content.keyTakeaways.length > 0 && (
         <div className="mt-6 pt-6 border-t border-gray-200">
