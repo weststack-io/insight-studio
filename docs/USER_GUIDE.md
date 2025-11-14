@@ -91,11 +91,13 @@ The application supports three distinct user roles:
   - Estate planning
   - Investment concepts
 - **Personalization**: Content adapted to user's generation, language, and sophistication level
+- **Display**: Content is rendered with enhanced markdown formatting for improved readability, including proper typography, headings, lists, links, and code blocks
 
 #### 4. **Topic Explainers**
 - **Location**: `/explainers`
 - **Content**: On-demand explanations of specific financial topics
 - **Features**: Search and browse by topic
+- **Display**: Content is rendered with enhanced markdown formatting for improved readability, including proper typography, headings, lists, links, and code blocks
 
 #### 5. **Preferences Management**
 - **Location**: `/dashboard` → Preferences tab
@@ -191,6 +193,7 @@ The application follows a weekly content generation cycle:
 - User authentication via Azure AD
 - Client-facing dashboard and content views
 - Content generation (briefings, explainers, lessons) with RAG via Azure AI Search
+- Enhanced markdown rendering for lessons and explainers with improved typography and readability
 - Personalization based on user preferences, generation, language, and sophistication level
 - Portfolio data integration with Addepar
 - Weekly briefings Azure Function (scheduled)

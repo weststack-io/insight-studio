@@ -95,10 +95,11 @@ The function is configured to run every Monday at 9 AM (cron: `0 0 9 * * 1`).
 
 - **Authentication**: Azure AD / Microsoft Entra ID integration
 - **Weekly Briefings**: Automated market and portfolio briefings
-- **Topic Explainers**: On-demand explanations of complex topics
-- **Micro-Lessons**: Short educational content tailored by generation and language
+- **Topic Explainers**: On-demand explanations of complex topics with enhanced markdown rendering
+- **Micro-Lessons**: Short educational content tailored by generation and language with enhanced markdown rendering
 - **Personalization**: Content tailored based on portfolio, preferences, and demographics
 - **White-Label Branding**: Configurable branding per tenant
+- **Content Rendering**: Enhanced markdown rendering using react-markdown with GitHub Flavored Markdown support
 
 ## Project Structure
 

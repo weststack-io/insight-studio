@@ -18,6 +18,7 @@ See [docs/USER_GUIDE.md](docs/USER_GUIDE.md) for detailed information about:
 ## Tech Stack
 
 - **Frontend**: Next.js 14+ with App Router, TypeScript, Tailwind CSS
+- **Content Rendering**: react-markdown with remark-gfm for enhanced markdown display
 - **Backend**: Next.js API routes, Azure Functions
 - **AI**: Azure OpenAI
 - **Database**: Azure SQL with Prisma ORM
@@ -99,6 +100,17 @@ See [infrastructure/](infrastructure/) directory for Bicep templates and deploym
 ## Environment Variables
 
 See [SETUP.md](SETUP.md) for a complete list of required environment variables.
+
+## Key Components
+
+### Content Components
+
+- **MarkdownContent**: Reusable component for rendering markdown content with enhanced typography and styling. Used by lessons and explainers to display AI-generated content with proper formatting for headings, lists, links, code blocks, and tables.
+- **LessonView**: Displays educational micro-lessons with personalized content based on user's generation, language, and sophistication level.
+- **ExplainerView**: Displays on-demand topic explanations with search and regeneration capabilities.
+- **BriefingCard**: Displays weekly market briefings with portfolio impact information.
+
+All content components use the `MarkdownContent` component for consistent, readable markdown rendering across the application.
 
 ## Documentation
 
