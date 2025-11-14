@@ -1,13 +1,13 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth/config';
-import { prisma } from '@/lib/db/client';
+import { NextRequest, NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth/config";
+import { prisma } from "@/lib/db/client";
 
 export async function GET(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const userId = (session.user as any).id;
@@ -27,14 +27,14 @@ export async function GET(request: NextRequest) {
     });
 
     if (!user) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
     return NextResponse.json({ user });
   } catch (error) {
-    console.error('Failed to fetch profile:', error);
+    console.error("Failed to fetch profile:", error);
     return NextResponse.json(
-      { error: 'Failed to fetch profile' },
+      { error: "Failed to fetch profile" },
       { status: 500 }
     );
   }
@@ -44,12 +44,12 @@ export async function PATCH(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const userId = (session.user as any).id;
     const body = await request.json();
-    
+
     const { name, language, generation, sophisticationLevel } = body as {
       name?: string;
       language?: string;
@@ -83,11 +83,10 @@ export async function PATCH(request: NextRequest) {
 
     return NextResponse.json({ user: updatedUser });
   } catch (error) {
-    console.error('Failed to update profile:', error);
+    console.error("Failed to update profile:", error);
     return NextResponse.json(
-      { error: 'Failed to update profile' },
+      { error: "Failed to update profile" },
       { status: 500 }
     );
   }
 }
-
