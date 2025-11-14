@@ -68,7 +68,7 @@ export default function DashboardPage() {
   const tenant = user.tenant;
 
   return (
-    <div className="min-h-screen bg-light h-screen w-screen flex flex-col">
+    <div className="min-h-screen bg-light w-screen flex flex-col">
       <Header tenant={tenant} user={user} signOut={signOut} />
       {/* Main Content Container */}
       <main className="flex-1 flex flex-col pt-16">
