@@ -7,7 +7,7 @@ import Link from "next/link";
 import { BriefingCard } from "@/components/content/BriefingCard";
 import { LessonView } from "@/components/content/LessonView";
 import { PreferenceSelector } from "@/components/personalization/PreferenceSelector";
-import { Briefing, Lesson, Explainer } from "@/types";
+import { Briefing, Lesson, Explainer, Language, Generation, SophisticationLevel } from "@/types";
 import Header from "@/components/Header";
 
 interface PersonalizedContent {
@@ -18,16 +18,35 @@ interface PersonalizedContent {
 }
 
 export default function DashboardPage() {
-  const { data: session } = useSession();
+  const { data: session, update } = useSession();
   const [content, setContent] = useState<PersonalizedContent | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<
     "feed" | "preferences" | "profile"
   >("feed");
+  
+  // Profile form state
+  const [profileData, setProfileData] = useState({
+    language: "en" as Language,
+    generation: "" as Generation | "",
+    sophisticationLevel: "" as SophisticationLevel | "",
+  });
+  const [savingProfile, setSavingProfile] = useState(false);
+  const [profileSaveMessage, setProfileSaveMessage] = useState<{
+    type: "success" | "error";
+    text: string;
+  } | null>(null);
 
   useEffect(() => {
     if (session) {
       fetchPersonalizedContent();
+      // Initialize profile form data from session
+      const user = session.user as any;
+      setProfileData({
+        language: (user.language as Language) || "en",
+        generation: (user.generation as Generation | "") || "",
+        sophisticationLevel: (user.sophisticationLevel as SophisticationLevel | "") || "",
+      });
     }
   }, [session]);
 
@@ -59,6 +78,55 @@ export default function DashboardPage() {
     } catch (error) {
       console.error("Failed to delete briefing:", error);
       throw error;
+    }
+  };
+
+  const handleSaveProfile = async () => {
+    if (!session?.user) return;
+
+    try {
+      setSavingProfile(true);
+      setProfileSaveMessage(null);
+
+      const response = await fetch("/api/profile", {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          language: profileData.language,
+          generation: profileData.generation || null,
+          sophisticationLevel: profileData.sophisticationLevel || null,
+        }),
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || "Failed to save profile");
+      }
+
+      const data = await response.json();
+      
+      // Update session to reflect changes
+      await update();
+      
+      setProfileSaveMessage({
+        type: "success",
+        text: "Profile settings saved successfully!",
+      });
+
+      // Clear message after 3 seconds
+      setTimeout(() => {
+        setProfileSaveMessage(null);
+      }, 3000);
+    } catch (error) {
+      console.error("Failed to save profile:", error);
+      setProfileSaveMessage({
+        type: "error",
+        text: error instanceof Error ? error.message : "Failed to save profile settings",
+      });
+    } finally {
+      setSavingProfile(false);
     }
   };
 
@@ -323,6 +391,52 @@ export default function DashboardPage() {
                     </h2>
                   </div>
                   <div className="flex flex-col gap-6 max-w-2xl mx-auto">
+                    {/* Success/Error Message */}
+                    {profileSaveMessage && (
+                      <div
+                        className={`p-4 rounded-lg ${
+                          profileSaveMessage.type === "success"
+                            ? "bg-green-50 text-green-800 border border-green-200"
+                            : "bg-red-50 text-red-800 border border-red-200"
+                        }`}
+                      >
+                        <div className="flex items-center gap-2">
+                          {profileSaveMessage.type === "success" ? (
+                            <svg
+                              className="w-5 h-5"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M5 13l4 4L19 7"
+                              />
+                            </svg>
+                          ) : (
+                            <svg
+                              className="w-5 h-5"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M6 18L18 6M6 6l12 12"
+                              />
+                            </svg>
+                          )}
+                          <span className="font-medium">
+                            {profileSaveMessage.text}
+                          </span>
+                        </div>
+                      </div>
+                    )}
+
                     <div className="flex flex-col">
                       <label className="block text-sm font-semibold text-gray-700 mb-2">
                         Email
@@ -340,7 +454,13 @@ export default function DashboardPage() {
                         Language
                       </label>
                       <select
-                        defaultValue={user.language || "en"}
+                        value={profileData.language}
+                        onChange={(e) =>
+                          setProfileData({
+                            ...profileData,
+                            language: e.target.value as Language,
+                          })
+                        }
                         className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent transition-all bg-white"
                       >
                         <option value="en">English</option>
@@ -357,7 +477,13 @@ export default function DashboardPage() {
                         Generation
                       </label>
                       <select
-                        defaultValue={user.generation || ""}
+                        value={profileData.generation}
+                        onChange={(e) =>
+                          setProfileData({
+                            ...profileData,
+                            generation: e.target.value as Generation | "",
+                          })
+                        }
                         className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent transition-all bg-white"
                       >
                         <option value="">Not specified</option>
@@ -373,7 +499,13 @@ export default function DashboardPage() {
                         Investment Sophistication Level
                       </label>
                       <select
-                        defaultValue={user.sophisticationLevel || ""}
+                        value={profileData.sophisticationLevel}
+                        onChange={(e) =>
+                          setProfileData({
+                            ...profileData,
+                            sophisticationLevel: e.target.value as SophisticationLevel | "",
+                          })
+                        }
                         className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent transition-all bg-white"
                       >
                         <option value="">Not specified</option>
@@ -393,6 +525,39 @@ export default function DashboardPage() {
                         disabled
                         className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-600 cursor-not-allowed"
                       />
+                    </div>
+
+                    {/* Save Button */}
+                    <div className="flex justify-end pt-4">
+                      <button
+                        onClick={handleSaveProfile}
+                        disabled={savingProfile}
+                        className="px-6 py-3 bg-accent text-white rounded-lg hover:opacity-90 transition-all font-medium shadow-lg hover:shadow-xl hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 flex items-center gap-2"
+                      >
+                        {savingProfile ? (
+                          <>
+                            <div className="inline-block animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
+                            <span>Saving...</span>
+                          </>
+                        ) : (
+                          <>
+                            <svg
+                              className="w-5 h-5"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M5 13l4 4L19 7"
+                              />
+                            </svg>
+                            <span>Save Settings</span>
+                          </>
+                        )}
+                      </button>
                     </div>
                   </div>
                 </div>
