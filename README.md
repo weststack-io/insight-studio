@@ -2,6 +2,19 @@
 
 AI-powered personalized briefings & education hub for wealth management firms.
 
+## About
+
+Insight Studio is designed for **wealth management firms** to deliver personalized financial briefings and educational content to their **high net worth (HNW) clients**. The application serves two primary user groups:
+
+- **Wealth Advisors**: Generate, review, and approve personalized content for clients
+- **HNW Clients**: Receive weekly briefings, educational lessons, and personalized financial content
+
+See [docs/USER_GUIDE.md](docs/USER_GUIDE.md) for detailed information about:
+- Who uses the application and their roles
+- How each user type interacts with the application
+- Content personalization features
+- Current implementation status vs planned features
+
 ## Tech Stack
 
 - **Frontend**: Next.js 14+ with App Router, TypeScript, Tailwind CSS
@@ -86,6 +99,13 @@ See [infrastructure/](infrastructure/) directory for Bicep templates and deploym
 ## Environment Variables
 
 See [SETUP.md](SETUP.md) for a complete list of required environment variables.
+
+## Documentation
+
+- **[User Guide](docs/USER_GUIDE.md)**: Complete guide to user roles, features, and how to use the application
+- **[Functional Requirements](docs/FUNCTIONAL_REQUIREMENTS.md)**: Complete feature specifications and architecture
+- **[Theme Configuration](docs/THEME_CONFIGURATION.md)**: Multi-tenant branding setup and customization
+- **[Setup Guide](SETUP.md)**: Environment setup and configuration instructions
 
 ## Theme Configuration
 
