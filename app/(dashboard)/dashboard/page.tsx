@@ -191,7 +191,7 @@ export default function DashboardPage() {
             <div className="flex items-center gap-4 sm:gap-2 overflow-x-auto -mb-px justify-center">
               <button
                 onClick={() => setActiveTab("feed")}
-                className={`px-4 sm:px-6 py-3 font-medium text-sm sm:text-base whitespace-nowrap transition-all border-b-2 ${
+                className={`px-4 sm:px-6 py-3 font-medium text-sm sm:text-base whitespace-nowrap transition-all border-b-2 cursor-pointer ${
                   activeTab === "feed"
                     ? "text-accent border-accent"
                     : "text-gray-500 border-transparent hover:text-accent hover:border-gray-300"
@@ -201,7 +201,7 @@ export default function DashboardPage() {
               </button>
               <button
                 onClick={() => setActiveTab("preferences")}
-                className={`px-4 sm:px-6 py-3 font-medium text-sm sm:text-base whitespace-nowrap transition-all border-b-2 ${
+                className={`px-4 sm:px-6 py-3 font-medium text-sm sm:text-base whitespace-nowrap transition-all border-b-2 cursor-pointer ${
                   activeTab === "preferences"
                     ? "text-accent border-accent"
                     : "text-gray-500 border-transparent hover:text-accent hover:border-gray-300"
@@ -211,7 +211,7 @@ export default function DashboardPage() {
               </button>
               <button
                 onClick={() => setActiveTab("profile")}
-                className={`px-4 sm:px-6 py-3 font-medium text-sm sm:text-base whitespace-nowrap transition-all border-b-2 ${
+                className={`px-4 sm:px-6 py-3 font-medium text-sm sm:text-base whitespace-nowrap transition-all border-b-2 cursor-pointer ${
                   activeTab === "profile"
                     ? "text-accent border-accent"
                     : "text-gray-500 border-transparent hover:text-accent hover:border-gray-300"
@@ -633,7 +633,7 @@ export default function DashboardPage() {
                       <button
                         onClick={handleSaveProfile}
                         disabled={savingProfile}
-                        className="px-6 py-3 bg-accent text-white rounded-lg hover:opacity-90 transition-all font-medium shadow-lg hover:shadow-xl hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 flex items-center gap-2"
+                        className="cursor-pointer px-6 py-3 bg-accent text-white rounded-lg hover:opacity-90 transition-all font-medium shadow-lg hover:shadow-xl hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 flex items-center gap-2"
                       >
                         {savingProfile ? (
                           <>

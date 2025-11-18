@@ -102,9 +102,10 @@ The application supports three distinct user roles:
 #### 5. **Preferences Management**
 - **Location**: `/dashboard` → Preferences tab
 - **Features**:
-  - Set interest levels for different topics
-  - Update language preferences
-  - Adjust content format preferences
+  - Add topics of interest
+  - Set interest levels (Low, Medium, High) for each topic
+  - Remove topics you're no longer interested in
+  - See how preferences affect your personalized content
 
 #### 6. **Profile Settings**
 - **Location**: `/dashboard` → Profile tab
@@ -163,6 +164,47 @@ The application personalizes content based on multiple signals:
 - **Engagement**: Topics user has opened or spent time on
 - **Preferences**: Explicit topic interests set by user
 - **Format Preferences**: Preferred content formats (text vs audio)
+
+### Topic Preferences - How They Work
+
+Topic preferences are a powerful way to customize your content experience. Here's how they affect what you see:
+
+#### Setting Topic Preferences
+
+1. Navigate to the **Preferences** tab on your dashboard
+2. Add topics you're interested in (e.g., "Stock Market Basics", "Bond Investing", "Estate Planning")
+3. Set an interest level for each topic:
+   - **High**: Topics you're very interested in
+   - **Medium**: Topics you have moderate interest in
+   - **Low**: Topics you have minimal interest in
+
+#### How Preferences Affect Your Content
+
+**1. Personalized Feed - Explainers Filtering**
+- Only topics marked with **High** interest level are used to filter explainers in your personalized dashboard feed
+- The feed will show up to 5 explainers that match your high-interest topics
+- This ensures you see the most relevant educational content first
+
+**2. Briefing Generation - AI Content Tailoring**
+- When weekly briefings are generated, **all** your topic preferences (regardless of interest level) are passed to the AI
+- The AI uses this information to tailor the briefing content to topics you care about
+- For example, if you've indicated interest in "Tax Strategies", the briefing may include more tax-related insights
+
+**3. Content Ranking and Scoring**
+- Explainers and lessons that match your topic preferences receive higher scores in the ranking algorithm
+- Content matching your preferences gets a +10 point boost in relevance scoring
+- This means preferred topics appear higher in search results and recommendations
+
+**4. Recommended Topics**
+- The system may suggest additional topics based on your existing preferences and portfolio holdings
+- These recommendations help you discover new areas of interest
+
+#### Best Practices
+
+- **Be Specific**: Use specific topic names (e.g., "Dividend Investing" rather than just "Investing")
+- **Set High Interest**: Mark topics you want to see in your feed as "High" interest
+- **Keep Updated**: Regularly review and update your preferences as your interests evolve
+- **Use Medium/Low**: Topics set to Medium or Low still influence briefing generation, so include topics you want mentioned even if you don't want them in your feed
 
 ## Content Delivery Channels
 
