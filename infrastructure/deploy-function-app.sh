@@ -12,6 +12,7 @@ AZURE_OPENAI_DEPLOYMENT_NAME="gpt-4"
 ADDEPAR_API_URL="https://api.addepar.com"
 ADDEPAR_CLIENT_ID=""
 ADDEPAR_CLIENT_SECRET=""
+ADDEPAR_FIRM=""
 NEXTAUTH_URL="http://localhost:3000"
 FUNCTION_APP_NAME=""
 SAVE_OUTPUTS=false
@@ -83,6 +84,10 @@ while [[ $# -gt 0 ]]; do
             ADDEPAR_CLIENT_SECRET="$2"
             shift 2
             ;;
+        --addepar-firm)
+            ADDEPAR_FIRM="$2"
+            shift 2
+            ;;
         --next-auth-secret)
             NEXT_AUTH_SECRET="$2"
             shift 2
@@ -122,6 +127,7 @@ while [[ $# -gt 0 ]]; do
             echo "  --addepar-api-url URL              Addepar API URL (default: https://api.addepar.com)"
             echo "  --addepar-client-id STRING          Addepar Client ID (optional)"
             echo "  --addepar-client-secret STRING      Addepar Client Secret (optional)"
+            echo "  --addepar-firm STRING               Addepar Firm (optional)"
             echo "  --next-auth-url URL                 NextAuth URL (default: http://localhost:3000)"
             echo "  --function-app-name NAME            Function App name (auto-generated if not provided)"
             echo "  --save-outputs                      Save outputs to JSON file"
@@ -203,6 +209,7 @@ PARAMS=(
     "addeparApiUrl=$ADDEPAR_API_URL"
     "addeparClientId=$ADDEPAR_CLIENT_ID"
     "addeparClientSecret=$ADDEPAR_CLIENT_SECRET"
+    "addeparFirm=$ADDEPAR_FIRM"
     "nextAuthSecret=$NEXT_AUTH_SECRET"
     "nextAuthUrl=$NEXTAUTH_URL"
     "location=$LOCATION"

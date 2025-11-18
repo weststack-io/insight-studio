@@ -47,6 +47,7 @@ AZURE_STORAGE_CONNECTION_STRING=DefaultEndpointsProtocol=https;AccountName=your-
 ADDEPAR_API_URL=https://api.addepar.com
 ADDEPAR_CLIENT_ID=your-client-id
 ADDEPAR_CLIENT_SECRET=your-client-secret
+ADDEPAR_FIRM=your-firm-id
 
 # NextAuth
 NEXTAUTH_URL=http://localhost:3000

@@ -46,6 +46,7 @@ The Bicep template requires the following parameters:
 - `addeparApiUrl` - Addepar API URL (default: `https://api.addepar.com`)
 - `addeparClientId` - Addepar client ID (optional, default: empty)
 - `addeparClientSecret` - Addepar client secret (optional, default: empty)
+- `addeparFirm` - Addepar Firm (optional, default: empty)
 - `nextAuthUrl` - NextAuth URL (default: `http://localhost:3000`)
 - `nodeVersion` - Node.js version for Function App (default: `~20`)
 

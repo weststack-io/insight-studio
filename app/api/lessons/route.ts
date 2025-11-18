@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
     };
 
     if (topic) {
-      where.topic = { contains: topic, mode: 'insensitive' };
+      where.topic = { contains: topic };
     }
 
     if (generation) {
@@ -110,6 +110,56 @@ export async function POST(request: NextRequest) {
     console.error('Failed to generate lesson:', error);
     return NextResponse.json(
       { error: 'Failed to generate lesson' },
+      { status: 500 }
+    );
+  }
+}
+
+export async function DELETE(request: NextRequest) {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session?.user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const user = session.user as any;
+    const tenantId = user.tenantId;
+    const searchParams = request.nextUrl.searchParams;
+    const lessonId = searchParams.get('id');
+
+    if (!lessonId) {
+      return NextResponse.json(
+        { error: 'Lesson ID is required' },
+        { status: 400 }
+      );
+    }
+
+    // Verify the lesson belongs to the tenant
+    const lesson = await prisma.lesson.findUnique({
+      where: { id: lessonId },
+    });
+
+    if (!lesson) {
+      return NextResponse.json(
+        { error: 'Lesson not found' },
+        { status: 404 }
+      );
+    }
+
+    if (lesson.tenantId !== tenantId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
+    }
+
+    // Delete the lesson
+    await prisma.lesson.delete({
+      where: { id: lessonId },
+    });
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error('Failed to delete lesson:', error);
+    return NextResponse.json(
+      { error: 'Failed to delete lesson' },
       { status: 500 }
     );
   }

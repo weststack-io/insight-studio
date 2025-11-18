@@ -11,7 +11,7 @@ param functionStorageAccountName string = 'stfunc${uniqueString(resourceGroup().
 param appInsightsName string = 'appi-insightstudio-${uniqueString(resourceGroup().id)}'
 
 @description('Node.js version for Function App')
-param nodeVersion string = '~20'
+param nodeVersion string = '22-lts'
 
 // Existing Resources - Connection Strings
 @description('Azure SQL Database connection string')
@@ -42,7 +42,7 @@ param azureOpenAiEndpoint string
 param azureOpenAiApiKey string
 
 @description('Azure OpenAI Deployment Name')
-param azureOpenAiDeploymentName string = 'gpt-4'
+param azureOpenAiDeploymentName string = 'gpt5-mini'
 
 // Azure AI Search Configuration
 @description('Azure AI Search Endpoint')
@@ -65,6 +65,9 @@ param addeparClientId string = ''
 @secure()
 @description('Addepar Client Secret')
 param addeparClientSecret string = ''
+
+@description('Addepar Firm')
+param addeparFirm string = ''
 
 // NextAuth Configuration
 @secure()
@@ -231,6 +234,10 @@ resource functionApp 'Microsoft.Web/sites@2024-11-01' = {
         {
           name: 'ADDEPAR_CLIENT_SECRET'
           value: addeparClientSecret
+        }
+        {
+          name: 'ADDEPAR_FIRM'
+          value: addeparFirm
         }
         {
           name: 'NEXTAUTH_SECRET'

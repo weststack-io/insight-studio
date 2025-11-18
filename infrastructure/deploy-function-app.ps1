@@ -50,6 +50,9 @@ param(
     [Parameter(Mandatory = $false)]
     [SecureString]$AddeparClientSecret,
     
+    [Parameter(Mandatory = $false)]
+    [string]$AddeparFirm = "",
+    
     [Parameter(Mandatory = $true)]
     [SecureString]$NextAuthSecret,
     
@@ -133,6 +136,7 @@ $params = @(
     "addeparApiUrl=$AddeparApiUrl",
     "addeparClientId=$AddeparClientId",
     "addeparClientSecret=$AddeparClientSecretPlain",
+    "addeparFirm=$AddeparFirm",
     "nextAuthSecret=$NextAuthSecretPlain",
     "nextAuthUrl=$NextAuthUrl",
     "location=$Location"

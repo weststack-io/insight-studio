@@ -38,14 +38,32 @@ export async function GET(request: NextRequest) {
     // Get portfolio data for personalization
     let portfolioData = null;
     try {
-      const preferences = dbUser.preferences as any;
-      const addeparEntityId = preferences?.addeparEntityId;
+      // Parse preferences JSON to get addeparEntityId
+      let addeparEntityId: string | undefined;
+      if (dbUser.preferences) {
+        try {
+          const preferences = JSON.parse(dbUser.preferences);
+          addeparEntityId = preferences.addeparEntityId;
+        } catch (e) {
+          // If parsing fails, preferences might be invalid JSON
+          console.error('Failed to parse user preferences:', e);
+        }
+      }
+      
       if (addeparEntityId) {
+        console.log(`[Personalize] Fetching portfolio data for entity ID: ${addeparEntityId}`);
         const addeparClient = getAddeparClient();
         portfolioData = await addeparClient.getPortfolioData(addeparEntityId);
+        console.log(`[Personalize] Successfully retrieved portfolio data:`, {
+          totalValue: portfolioData?.totalValue,
+          holdingsCount: portfolioData?.holdings.length,
+          hasData: !!portfolioData,
+        });
+      } else {
+        console.log(`[Personalize] No Addepar Entity ID found in user preferences`);
       }
     } catch (error) {
-      console.error('Failed to fetch portfolio data:', error);
+      console.error('[Personalize] Failed to fetch portfolio data:', error);
     }
 
     // Get user's preferred topics
@@ -90,10 +108,17 @@ export async function GET(request: NextRequest) {
     // Generate recommended topics based on portfolio
     const recommendedTopics: string[] = [];
     if (portfolioData) {
+      console.log(`[Personalize] Generating recommended topics from portfolio data:`, {
+        holdingsCount: portfolioData.holdings.length,
+        totalValue: portfolioData.totalValue,
+      });
+      
       const assetClasses = portfolioData.holdings
         .map(h => h.assetClass)
         .filter(Boolean) as string[];
       const uniqueAssetClasses = [...new Set(assetClasses)];
+
+      console.log(`[Personalize] Found asset classes in portfolio:`, uniqueAssetClasses);
 
       // Map asset classes to educational topics
       const topicMap: Record<string, string[]> = {
@@ -107,6 +132,10 @@ export async function GET(request: NextRequest) {
         const topics = topicMap[assetClass] || [];
         recommendedTopics.push(...topics);
       });
+      
+      console.log(`[Personalize] Generated ${recommendedTopics.length} recommended topics from portfolio`);
+    } else {
+      console.log(`[Personalize] No portfolio data available, skipping topic recommendations`);
     }
 
     const personalizedContent: PersonalizedContent = {

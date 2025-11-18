@@ -88,6 +88,7 @@ export const authOptions: NextAuthOptions = {
           (session.user as any).generation = dbUser.generation;
           (session.user as any).sophisticationLevel =
             dbUser.sophisticationLevel;
+          (session.user as any).preferences = dbUser.preferences;
           (session.user as any).tenant = dbUser.tenant;
         }
       }

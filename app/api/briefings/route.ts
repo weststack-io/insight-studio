@@ -76,20 +76,49 @@ export async function POST(request: NextRequest) {
     // Get portfolio data if portfolio briefing
     let portfolioData;
     if (type === "portfolio") {
-      // For MVP, we'll need to store Addepar entity ID in user profile or preferences
-      // For now, we'll try to fetch if available
       try {
-        const addeparEntityId = (dbUser.preferences as any)?.addeparEntityId;
+        // Parse preferences JSON to get addeparEntityId
+        let addeparEntityId: string | undefined;
+        if (dbUser.preferences) {
+          try {
+            const preferences = JSON.parse(dbUser.preferences);
+            addeparEntityId = preferences.addeparEntityId;
+          } catch (e) {
+            // If parsing fails, preferences might be invalid JSON
+            console.error("Failed to parse user preferences:", e);
+          }
+        }
+
         if (addeparEntityId) {
+          console.log(
+            `[Briefings] Fetching portfolio data for entity ID: ${addeparEntityId}`
+          );
           const addeparClient = getAddeparClient();
           portfolioData = await addeparClient.getPortfolioData(addeparEntityId);
+          console.log(`[Briefings] Successfully retrieved portfolio data:`, {
+            totalValue: portfolioData?.totalValue,
+            holdingsCount: portfolioData?.holdings.length,
+            hasData: !!portfolioData,
+          });
+        } else {
+          console.log(
+            `[Briefings] No Addepar Entity ID found in user preferences for portfolio briefing`
+          );
         }
       } catch (error) {
-        console.error("Failed to fetch portfolio data:", error);
+        console.error("[Briefings] Failed to fetch portfolio data:", error);
       }
     }
 
     // Generate briefing
+    console.log(
+      `[Briefings] Generating ${type} briefing with portfolio data:`,
+      {
+        hasPortfolioData: !!portfolioData,
+        portfolioValue: portfolioData?.totalValue,
+        holdingsCount: portfolioData?.holdings?.length,
+      }
+    );
     const briefingContent = await generateBriefing({
       type,
       portfolioData,
@@ -97,6 +126,13 @@ export async function POST(request: NextRequest) {
       generation: dbUser.generation as any,
       sophisticationLevel: dbUser.sophisticationLevel as any,
       userPreferences: dbUser.userPreferences.map((p) => p.topic),
+    });
+
+    console.log(`[Briefings] Successfully generated ${type} briefing:`, {
+      title: briefingContent.title,
+      sectionsCount: briefingContent.sections.length,
+      keyTakeawaysCount: briefingContent.keyTakeaways.length,
+      usedPortfolioData: !!portfolioData,
     });
 
     // Calculate week start date (Monday of current week)

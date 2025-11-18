@@ -76,6 +76,9 @@ param addeparClientId string = ''
 @description('Addepar Client Secret')
 param addeparClientSecret string = ''
 
+@description('Addepar Firm')
+param addeparFirm string = ''
+
 // NextAuth Configuration
 @secure()
 @description('NextAuth Secret')
@@ -317,6 +320,10 @@ resource appInsights 'Microsoft.Insights/components@2020-02-02' = {
 //         {
 //           name: 'ADDEPAR_CLIENT_SECRET'
 //           value: addeparClientSecret
+//         }
+//         {
+//           name: 'ADDEPAR_FIRM'
+//           value: addeparFirm
 //         }
 //         {
 //           name: 'NEXTAUTH_SECRET'

@@ -1,7 +1,7 @@
 import { app, InvocationContext, Timer } from "@azure/functions";
 import { PrismaClient } from "@prisma/client";
-import { generateBriefing } from "../../lib/ai/generators";
-import { getAddeparClient } from "../../lib/addepar/client";
+import { generateBriefing } from "../../../lib/ai/generators";
+import { getAddeparClient } from "../../../lib/addepar/client";
 
 const prisma = new PrismaClient();
 

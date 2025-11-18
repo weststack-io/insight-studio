@@ -50,11 +50,12 @@ export async function PATCH(request: NextRequest) {
     const userId = (session.user as any).id;
     const body = await request.json();
 
-    const { name, language, generation, sophisticationLevel } = body as {
+    const { name, language, generation, sophisticationLevel, addeparEntityId } = body as {
       name?: string;
       language?: string;
       generation?: string | null;
       sophisticationLevel?: string | null;
+      addeparEntityId?: string | null;
     };
 
     // Build update object with only provided fields
@@ -64,6 +65,36 @@ export async function PATCH(request: NextRequest) {
     if (generation !== undefined) updateData.generation = generation || null;
     if (sophisticationLevel !== undefined) {
       updateData.sophisticationLevel = sophisticationLevel || null;
+    }
+
+    // Handle preferences JSON field for addeparEntityId
+    if (addeparEntityId !== undefined) {
+      // Get current user to read existing preferences
+      const currentUser = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { preferences: true },
+      });
+
+      // Parse existing preferences or start with empty object
+      let preferences: any = {};
+      if (currentUser?.preferences) {
+        try {
+          preferences = JSON.parse(currentUser.preferences);
+        } catch (e) {
+          // If parsing fails, start with empty object
+          preferences = {};
+        }
+      }
+
+      // Update addeparEntityId in preferences
+      if (addeparEntityId === null || addeparEntityId === '') {
+        delete preferences.addeparEntityId;
+      } else {
+        preferences.addeparEntityId = addeparEntityId;
+      }
+
+      // Stringify and update
+      updateData.preferences = JSON.stringify(preferences);
     }
 
     const updatedUser = await prisma.user.update({

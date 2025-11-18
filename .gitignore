@@ -65,7 +65,7 @@ infrastructure/.bicep/
 *.tgz
 
 # IDE and Editor files
-.vscode/
+
 .idea/
 *.swp
 *.swo

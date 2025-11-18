@@ -75,7 +75,7 @@ if (Test-Path $distFunctionPath) {
 Write-Host "Deploying to Azure Function App: $FunctionAppName" -ForegroundColor Cyan
 cd (Join-Path $PSScriptRoot "..")
 
-func azure functionapp publish $FunctionAppName --javascript
+func azure functionapp publish $FunctionAppName --typescript
 
 if ($LASTEXITCODE -ne 0) {
     Write-Host "Deployment failed!" -ForegroundColor Red

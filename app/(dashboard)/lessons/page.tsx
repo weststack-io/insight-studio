@@ -84,6 +84,24 @@ export default function LessonsPage() {
     }
   };
 
+  const handleDeleteLesson = async (lessonId: string) => {
+    try {
+      const response = await fetch(`/api/lessons?id=${lessonId}`, {
+        method: "DELETE",
+      });
+
+      if (response.ok) {
+        await fetchLessons();
+      } else {
+        const data = await response.json();
+        throw new Error(data.error || "Failed to delete lesson");
+      }
+    } catch (error) {
+      console.error("Failed to delete lesson:", error);
+      throw error;
+    }
+  };
+
   const popularTopics = [
     "Understanding Risk",
     "Diversification Basics",
@@ -226,7 +244,11 @@ export default function LessonsPage() {
         ) : (
           <div>
             {lessons.map((lesson) => (
-              <LessonView key={lesson.id} lesson={lesson} />
+              <LessonView 
+                key={lesson.id} 
+                lesson={lesson} 
+                onDelete={handleDeleteLesson}
+              />
             ))}
           </div>
         )}

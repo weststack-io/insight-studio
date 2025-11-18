@@ -2,20 +2,94 @@
 
 import { Lesson } from '@/types';
 import { MarkdownContent } from './MarkdownContent';
+import { useState } from 'react';
 
 interface LessonViewProps {
   lesson: Lesson;
+  onDelete?: (lessonId: string) => Promise<void>;
 }
 
-export function LessonView({ lesson }: LessonViewProps) {
+export function LessonView({ lesson, onDelete }: LessonViewProps) {
   const content = JSON.parse(lesson.content);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
+
+  const handleDelete = async () => {
+    if (!onDelete) return;
+
+    if (!showConfirm) {
+      setShowConfirm(true);
+      return;
+    }
+
+    try {
+      setIsDeleting(true);
+      await onDelete(lesson.id);
+    } catch (error) {
+      console.error('Failed to delete lesson:', error);
+      setIsDeleting(false);
+      setShowConfirm(false);
+    }
+  };
+
+  const handleCancel = () => {
+    setShowConfirm(false);
+  };
 
   return (
     <article className="bg-white rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition-shadow p-6 lg:p-8">
       <div className="mb-6">
-        <h3 className="text-xl lg:text-2xl font-bold text-gray-900 mb-4">
-          {content.title || lesson.topic}
-        </h3>
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 mb-4">
+          <h3 className="text-xl lg:text-2xl font-bold text-gray-900">
+            {content.title || lesson.topic}
+          </h3>
+          {onDelete && (
+            <div className="relative">
+              {showConfirm ? (
+                <div className="flex items-center gap-2 bg-red-50 border border-red-200 rounded-lg px-3 py-1.5">
+                  <span className="text-xs text-red-700 font-medium">
+                    Delete?
+                  </span>
+                  <button
+                    onClick={handleDelete}
+                    disabled={isDeleting}
+                    className="text-xs px-2 py-1 bg-red-600 text-white rounded hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  >
+                    {isDeleting ? 'Deleting...' : 'Yes'}
+                  </button>
+                  <button
+                    onClick={handleCancel}
+                    disabled={isDeleting}
+                    className="text-xs px-2 py-1 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  >
+                    No
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={handleDelete}
+                  disabled={isDeleting}
+                  className="p-1.5 text-gray-400 hover:text-red-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                  title="Delete lesson"
+                >
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                    />
+                  </svg>
+                </button>
+              )}
+            </div>
+          )}
+        </div>
         <div className="flex flex-wrap gap-2">
           {lesson.generation && (
             <span className="inline-flex items-center px-3 py-1 text-xs font-medium rounded-full bg-blue-50 text-blue-700 border border-blue-200">

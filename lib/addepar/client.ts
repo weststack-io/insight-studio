@@ -46,11 +46,16 @@ class AddeparClient {
       },
     });
 
-    // Add request interceptor to include auth token
+    // Add request interceptor to include auth token and Addepar-Firm header
     this.client.interceptors.request.use(async (config) => {
       const token = await this.getAccessToken();
       if (token) {
         config.headers.Authorization = `Bearer ${token}`;
+      }
+      // Add Addepar-Firm header if configured
+      const addeparFirm = process.env.ADDEPAR_FIRM;
+      if (addeparFirm) {
+        config.headers['Addepar-Firm'] = addeparFirm;
       }
       return config;
     });
@@ -100,6 +105,7 @@ class AddeparClient {
    */
   async getPortfolioData(entityId: string): Promise<PortfolioData> {
     try {
+      console.log(`[Addepar] Requesting portfolio data for entity: ${entityId}`);
       // Addepar API endpoint for portfolio holdings
       // Note: Actual endpoint may vary based on Addepar API version
       const response = await this.client.get<AddeparPortfolioResponse>(
@@ -111,6 +117,7 @@ class AddeparClient {
           },
         }
       );
+      console.log(`[Addepar] Received response from Addepar API for entity ${entityId}`);
 
       const portfolio = response.data.data[0];
       if (!portfolio) {
@@ -119,6 +126,18 @@ class AddeparClient {
 
       const holdings = portfolio.attributes.holdings || [];
       const totalValue = portfolio.attributes.market_value || 0;
+
+      console.log(`[Addepar] Retrieved portfolio data for entity ${entityId}:`, {
+        totalValue,
+        holdingsCount: holdings.length,
+        rawHoldings: holdings.slice(0, 3).map(h => ({
+          id: h.id,
+          name: h.attributes.name,
+          ticker: h.attributes.ticker,
+          marketValue: h.attributes.market_value,
+          assetClass: h.attributes.asset_class,
+        })),
+      });
 
       // Transform Addepar holdings to our format
       const transformedHoldings = holdings.map((holding) => {
@@ -132,11 +151,29 @@ class AddeparClient {
         };
       });
 
-      return {
+      const portfolioData = {
         holdings: transformedHoldings,
         totalValue,
         lastUpdated: new Date(),
       };
+
+      console.log(`[Addepar] Transformed portfolio data:`, {
+        totalValue: portfolioData.totalValue,
+        holdingsCount: portfolioData.holdings.length,
+        topHoldings: portfolioData.holdings
+          .sort((a, b) => b.value - a.value)
+          .slice(0, 5)
+          .map(h => ({
+            symbol: h.symbol,
+            name: h.name,
+            value: h.value,
+            percentage: h.percentage.toFixed(2) + '%',
+            assetClass: h.assetClass,
+          })),
+        assetClasses: [...new Set(portfolioData.holdings.map(h => h.assetClass).filter(Boolean))],
+      });
+
+      return portfolioData;
     } catch (error) {
       console.error('Failed to fetch portfolio data from Addepar:', error);
       throw new Error('Failed to fetch portfolio data');
