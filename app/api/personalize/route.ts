@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth/config';
 import { prisma } from '@/lib/db/client';
-import { getAddeparClient } from '@/lib/addepar/client';
+// import { getAddeparClient } from '@/lib/addepar/client';
 import { Briefing, Explainer, Lesson } from '@/types';
 
 interface PersonalizedContent {
@@ -36,35 +36,36 @@ export async function GET(request: NextRequest) {
     }
 
     // Get portfolio data for personalization
+    // COMMENTED OUT: Addepar portfolio data fetching temporarily disabled
     let portfolioData = null;
-    try {
-      // Parse preferences JSON to get addeparEntityId
-      let addeparEntityId: string | undefined;
-      if (dbUser.preferences) {
-        try {
-          const preferences = JSON.parse(dbUser.preferences);
-          addeparEntityId = preferences.addeparEntityId;
-        } catch (e) {
-          // If parsing fails, preferences might be invalid JSON
-          console.error('Failed to parse user preferences:', e);
-        }
-      }
+    // try {
+    //   // Parse preferences JSON to get addeparEntityId
+    //   let addeparEntityId: string | undefined;
+    //   if (dbUser.preferences) {
+    //     try {
+    //       const preferences = JSON.parse(dbUser.preferences);
+    //       addeparEntityId = preferences.addeparEntityId;
+    //     } catch (e) {
+    //       // If parsing fails, preferences might be invalid JSON
+    //       console.error('Failed to parse user preferences:', e);
+    //     }
+    //   }
       
-      if (addeparEntityId) {
-        console.log(`[Personalize] Fetching portfolio data for entity ID: ${addeparEntityId}`);
-        const addeparClient = getAddeparClient();
-        portfolioData = await addeparClient.getPortfolioData(addeparEntityId);
-        console.log(`[Personalize] Successfully retrieved portfolio data:`, {
-          totalValue: portfolioData?.totalValue,
-          holdingsCount: portfolioData?.holdings.length,
-          hasData: !!portfolioData,
-        });
-      } else {
-        console.log(`[Personalize] No Addepar Entity ID found in user preferences`);
-      }
-    } catch (error) {
-      console.error('[Personalize] Failed to fetch portfolio data:', error);
-    }
+    //   if (addeparEntityId) {
+    //     console.log(`[Personalize] Fetching portfolio data for entity ID: ${addeparEntityId}`);
+    //     const addeparClient = getAddeparClient();
+    //     portfolioData = await addeparClient.getPortfolioData(addeparEntityId);
+    //     console.log(`[Personalize] Successfully retrieved portfolio data:`, {
+    //       totalValue: portfolioData?.totalValue,
+    //       holdingsCount: portfolioData?.holdings.length,
+    //       hasData: !!portfolioData,
+    //     });
+    //   } else {
+    //     console.log(`[Personalize] No Addepar Entity ID found in user preferences`);
+    //   }
+    // } catch (error) {
+    //   console.error('[Personalize] Failed to fetch portfolio data:', error);
+    // }
 
     // Get user's preferred topics
     const preferredTopics = dbUser.userPreferences
@@ -106,37 +107,38 @@ export async function GET(request: NextRequest) {
     });
 
     // Generate recommended topics based on portfolio
+    // COMMENTED OUT: Portfolio-based topic recommendations temporarily disabled
     const recommendedTopics: string[] = [];
-    if (portfolioData) {
-      console.log(`[Personalize] Generating recommended topics from portfolio data:`, {
-        holdingsCount: portfolioData.holdings.length,
-        totalValue: portfolioData.totalValue,
-      });
+    // if (portfolioData) {
+    //   console.log(`[Personalize] Generating recommended topics from portfolio data:`, {
+    //     holdingsCount: portfolioData.holdings.length,
+    //     totalValue: portfolioData.totalValue,
+    //   });
       
-      const assetClasses = portfolioData.holdings
-        .map(h => h.assetClass)
-        .filter(Boolean) as string[];
-      const uniqueAssetClasses = [...new Set(assetClasses)];
+    //   const assetClasses = portfolioData.holdings
+    //     .map(h => h.assetClass)
+    //     .filter(Boolean) as string[];
+    //   const uniqueAssetClasses = [...new Set(assetClasses)];
 
-      console.log(`[Personalize] Found asset classes in portfolio:`, uniqueAssetClasses);
+    //   console.log(`[Personalize] Found asset classes in portfolio:`, uniqueAssetClasses);
 
-      // Map asset classes to educational topics
-      const topicMap: Record<string, string[]> = {
-        'Equity': ['Stock Market Basics', 'Dividend Investing', 'Growth vs Value'],
-        'Fixed Income': ['Bond Investing', 'Municipal Bond Ladders', 'Interest Rate Risk'],
-        'Alternative': ['Alternative Investments', 'Private Equity', 'Hedge Funds'],
-        'Real Estate': ['REITs', 'Real Estate Investing', 'Property Investment Strategies'],
-      };
+    //   // Map asset classes to educational topics
+    //   const topicMap: Record<string, string[]> = {
+    //     'Equity': ['Stock Market Basics', 'Dividend Investing', 'Growth vs Value'],
+    //     'Fixed Income': ['Bond Investing', 'Municipal Bond Ladders', 'Interest Rate Risk'],
+    //     'Alternative': ['Alternative Investments', 'Private Equity', 'Hedge Funds'],
+    //     'Real Estate': ['REITs', 'Real Estate Investing', 'Property Investment Strategies'],
+    //   };
 
-      uniqueAssetClasses.forEach(assetClass => {
-        const topics = topicMap[assetClass] || [];
-        recommendedTopics.push(...topics);
-      });
+    //   uniqueAssetClasses.forEach(assetClass => {
+    //     const topics = topicMap[assetClass] || [];
+    //     recommendedTopics.push(...topics);
+    //   });
       
-      console.log(`[Personalize] Generated ${recommendedTopics.length} recommended topics from portfolio`);
-    } else {
-      console.log(`[Personalize] No portfolio data available, skipping topic recommendations`);
-    }
+    //   console.log(`[Personalize] Generated ${recommendedTopics.length} recommended topics from portfolio`);
+    // } else {
+    //   console.log(`[Personalize] No portfolio data available, skipping topic recommendations`);
+    // }
 
     const personalizedContent: PersonalizedContent = {
       briefings: briefings as Briefing[],

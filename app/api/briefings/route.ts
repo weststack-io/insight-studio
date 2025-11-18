@@ -3,7 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth/config";
 import { prisma } from "@/lib/db/client";
 import { generateBriefing } from "@/lib/ai/generators";
-import { getAddeparClient } from "@/lib/addepar/client";
+// import { getAddeparClient } from "@/lib/addepar/client";
 import { BriefingType } from "@/types";
 
 export async function GET(request: NextRequest) {
@@ -74,41 +74,42 @@ export async function POST(request: NextRequest) {
     }
 
     // Get portfolio data if portfolio briefing
+    // COMMENTED OUT: Addepar portfolio data fetching temporarily disabled
     let portfolioData;
-    if (type === "portfolio") {
-      try {
-        // Parse preferences JSON to get addeparEntityId
-        let addeparEntityId: string | undefined;
-        if (dbUser.preferences) {
-          try {
-            const preferences = JSON.parse(dbUser.preferences);
-            addeparEntityId = preferences.addeparEntityId;
-          } catch (e) {
-            // If parsing fails, preferences might be invalid JSON
-            console.error("Failed to parse user preferences:", e);
-          }
-        }
+    // if (type === "portfolio") {
+    //   try {
+    //     // Parse preferences JSON to get addeparEntityId
+    //     let addeparEntityId: string | undefined;
+    //     if (dbUser.preferences) {
+    //       try {
+    //         const preferences = JSON.parse(dbUser.preferences);
+    //         addeparEntityId = preferences.addeparEntityId;
+    //       } catch (e) {
+    //         // If parsing fails, preferences might be invalid JSON
+    //         console.error("Failed to parse user preferences:", e);
+    //       }
+    //     }
 
-        if (addeparEntityId) {
-          console.log(
-            `[Briefings] Fetching portfolio data for entity ID: ${addeparEntityId}`
-          );
-          const addeparClient = getAddeparClient();
-          portfolioData = await addeparClient.getPortfolioData(addeparEntityId);
-          console.log(`[Briefings] Successfully retrieved portfolio data:`, {
-            totalValue: portfolioData?.totalValue,
-            holdingsCount: portfolioData?.holdings.length,
-            hasData: !!portfolioData,
-          });
-        } else {
-          console.log(
-            `[Briefings] No Addepar Entity ID found in user preferences for portfolio briefing`
-          );
-        }
-      } catch (error) {
-        console.error("[Briefings] Failed to fetch portfolio data:", error);
-      }
-    }
+    //     if (addeparEntityId) {
+    //       console.log(
+    //         `[Briefings] Fetching portfolio data for entity ID: ${addeparEntityId}`
+    //       );
+    //       const addeparClient = getAddeparClient();
+    //       portfolioData = await addeparClient.getPortfolioData(addeparEntityId);
+    //       console.log(`[Briefings] Successfully retrieved portfolio data:`, {
+    //         totalValue: portfolioData?.totalValue,
+    //         holdingsCount: portfolioData?.holdings.length,
+    //         hasData: !!portfolioData,
+    //       });
+    //     } else {
+    //       console.log(
+    //         `[Briefings] No Addepar Entity ID found in user preferences for portfolio briefing`
+    //       );
+    //     }
+    //   } catch (error) {
+    //     console.error("[Briefings] Failed to fetch portfolio data:", error);
+    //   }
+    // }
 
     // Generate briefing
     console.log(

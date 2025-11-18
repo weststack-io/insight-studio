@@ -1,7 +1,7 @@
 import { app, InvocationContext, Timer } from "@azure/functions";
 import { PrismaClient } from "@prisma/client";
 import { generateBriefing } from "../../../lib/ai/generators";
-import { getAddeparClient } from "../../../lib/addepar/client";
+// import { getAddeparClient } from "../../../lib/addepar/client";
 
 const prisma = new PrismaClient();
 
@@ -50,7 +50,7 @@ async function weeklyBriefingsGenerator(
       )
     );
 
-    const addeparClient = getAddeparClient();
+    // const addeparClient = getAddeparClient();
     let successCount = 0;
     let errorCount = 0;
 
@@ -91,76 +91,77 @@ async function weeklyBriefingsGenerator(
             }
 
             // Generate portfolio briefing if user has Addepar entity ID
-            if (user.tenantId) {
-              const portfolioKey = `${user.id}-portfolio`;
-              if (!existingKeys.has(portfolioKey)) {
-                // Parse preferences JSON to get addeparEntityId
-                let addeparEntityId: string | undefined;
-                if (user.preferences) {
-                  try {
-                    const preferences = JSON.parse(user.preferences);
-                    addeparEntityId = preferences.addeparEntityId;
-                  } catch (e) {
-                    // If parsing fails, preferences might be invalid JSON
-                    context.log(
-                      `Warning: Failed to parse preferences for user ${user.id}:`,
-                      e
-                    );
-                  }
-                }
+            // COMMENTED OUT: Addepar portfolio briefing generation temporarily disabled
+            // if (user.tenantId) {
+            //   const portfolioKey = `${user.id}-portfolio`;
+            //   if (!existingKeys.has(portfolioKey)) {
+            //     // Parse preferences JSON to get addeparEntityId
+            //     let addeparEntityId: string | undefined;
+            //     if (user.preferences) {
+            //       try {
+            //         const preferences = JSON.parse(user.preferences);
+            //         addeparEntityId = preferences.addeparEntityId;
+            //       } catch (e) {
+            //         // If parsing fails, preferences might be invalid JSON
+            //         context.log(
+            //           `Warning: Failed to parse preferences for user ${user.id}:`,
+            //           e
+            //         );
+            //       }
+            //     }
 
-                if (addeparEntityId) {
-                  try {
-                    context.log(
-                      `Fetching portfolio data for user ${user.id} with entity ID: ${addeparEntityId}`
-                    );
-                    const portfolioData = await addeparClient.getPortfolioData(
-                      addeparEntityId
-                    );
-                    context.log(
-                      `Successfully retrieved portfolio data for user ${user.id}:`,
-                      {
-                        totalValue: portfolioData.totalValue,
-                        holdingsCount: portfolioData.holdings.length,
-                      }
-                    );
+            //     if (addeparEntityId) {
+            //       try {
+            //         context.log(
+            //           `Fetching portfolio data for user ${user.id} with entity ID: ${addeparEntityId}`
+            //         );
+            //         const portfolioData = await addeparClient.getPortfolioData(
+            //           addeparEntityId
+            //         );
+            //         context.log(
+            //           `Successfully retrieved portfolio data for user ${user.id}:`,
+            //           {
+            //             totalValue: portfolioData.totalValue,
+            //             holdingsCount: portfolioData.holdings.length,
+            //           }
+            //         );
 
-                    context.log(
-                      `Generating portfolio briefing for user ${user.id} with portfolio data`
-                    );
-                    const portfolioBriefing = await generateBriefing({
-                      type: "portfolio",
-                      portfolioData,
-                      language: user.language as any,
-                      generation: user.generation as any,
-                      sophisticationLevel: user.sophisticationLevel as any,
-                      userPreferences: user.userPreferences.map(
-                        (p: { topic: string }) => p.topic
-                      ),
-                    });
+            //         context.log(
+            //           `Generating portfolio briefing for user ${user.id} with portfolio data`
+            //         );
+            //         const portfolioBriefing = await generateBriefing({
+            //           type: "portfolio",
+            //           portfolioData,
+            //           language: user.language as any,
+            //           generation: user.generation as any,
+            //           sophisticationLevel: user.sophisticationLevel as any,
+            //           userPreferences: user.userPreferences.map(
+            //             (p: { topic: string }) => p.topic
+            //           ),
+            //         });
 
-                    await prisma.briefing.create({
-                      data: {
-                        userId: user.id,
-                        tenantId: user.tenantId,
-                        type: "portfolio",
-                        content: JSON.stringify(portfolioBriefing),
-                        weekStartDate,
-                      },
-                    });
+            //         await prisma.briefing.create({
+            //           data: {
+            //             userId: user.id,
+            //             tenantId: user.tenantId,
+            //             type: "portfolio",
+            //             content: JSON.stringify(portfolioBriefing),
+            //             weekStartDate,
+            //           },
+            //         });
 
-                    context.log(
-                      `Generated portfolio briefing for user ${user.id}`
-                    );
-                  } catch (error) {
-                    context.log(
-                      `Warning: Failed to generate portfolio briefing for user ${user.id}:`,
-                      error
-                    );
-                  }
-                }
-              }
-            }
+            //         context.log(
+            //           `Generated portfolio briefing for user ${user.id}`
+            //         );
+            //       } catch (error) {
+            //         context.log(
+            //           `Warning: Failed to generate portfolio briefing for user ${user.id}:`,
+            //           error
+            //         );
+            //       }
+            //     }
+            //   }
+            // }
 
             successCount++;
           } catch (error) {
