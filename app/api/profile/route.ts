@@ -50,12 +50,12 @@ export async function PATCH(request: NextRequest) {
     const userId = (session.user as any).id;
     const body = await request.json();
 
-    const { name, language, generation, sophisticationLevel, addeparEntityId } = body as {
+    const { name, language, generation, sophisticationLevel, addeparPortfolioId } = body as {
       name?: string;
       language?: string;
       generation?: string | null;
       sophisticationLevel?: string | null;
-      addeparEntityId?: string | null;
+      addeparPortfolioId?: string | null;
     };
 
     // Build update object with only provided fields
@@ -67,8 +67,8 @@ export async function PATCH(request: NextRequest) {
       updateData.sophisticationLevel = sophisticationLevel || null;
     }
 
-    // Handle preferences JSON field for addeparEntityId
-    if (addeparEntityId !== undefined) {
+    // Handle preferences JSON field for addeparPortfolioId
+    if (addeparPortfolioId !== undefined) {
       // Get current user to read existing preferences
       const currentUser = await prisma.user.findUnique({
         where: { id: userId },
@@ -86,11 +86,11 @@ export async function PATCH(request: NextRequest) {
         }
       }
 
-      // Update addeparEntityId in preferences
-      if (addeparEntityId === null || addeparEntityId === '') {
-        delete preferences.addeparEntityId;
+      // Update addeparPortfolioId in preferences
+      if (addeparPortfolioId === null || addeparPortfolioId === '') {
+        delete preferences.addeparPortfolioId;
       } else {
-        preferences.addeparEntityId = addeparEntityId;
+        preferences.addeparPortfolioId = addeparPortfolioId;
       }
 
       // Stringify and update
