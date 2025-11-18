@@ -7,7 +7,14 @@ import Link from "next/link";
 import { BriefingCard } from "@/components/content/BriefingCard";
 import { LessonView } from "@/components/content/LessonView";
 import { PreferenceSelector } from "@/components/personalization/PreferenceSelector";
-import { Briefing, Lesson, Explainer, Language, Generation, SophisticationLevel } from "@/types";
+import {
+  Briefing,
+  Lesson,
+  Explainer,
+  Language,
+  Generation,
+  SophisticationLevel,
+} from "@/types";
 import Header from "@/components/Header";
 
 interface PersonalizedContent {
@@ -24,43 +31,44 @@ export default function DashboardPage() {
   const [activeTab, setActiveTab] = useState<
     "feed" | "preferences" | "profile"
   >("feed");
-  
+
   // Profile form state
   const [profileData, setProfileData] = useState({
     language: "en" as Language,
     generation: "" as Generation | "",
     sophisticationLevel: "" as SophisticationLevel | "",
-    addeparEntityId: "",
+    addeparPortfolioId: "",
   });
   const [savingProfile, setSavingProfile] = useState(false);
   const [profileSaveMessage, setProfileSaveMessage] = useState<{
     type: "success" | "error";
     text: string;
   } | null>(null);
-  const [showAddeparEntityId, setShowAddeparEntityId] = useState(false);
+  const [showAddeparPortfolioId, setShowAddeparPortfolioId] = useState(false);
 
   useEffect(() => {
     if (session) {
       fetchPersonalizedContent();
       // Initialize profile form data from session
       const user = session.user as any;
-      
-      // Parse preferences to get addeparEntityId
-      let addeparEntityId = "";
+
+      // Parse preferences to get addeparPortfolioId
+      let addeparPortfolioId = "";
       if (user.preferences) {
         try {
           const preferences = JSON.parse(user.preferences);
-          addeparEntityId = preferences.addeparEntityId || "";
+          addeparPortfolioId = preferences.addeparPortfolioId || "";
         } catch (e) {
           // If parsing fails, leave empty
         }
       }
-      
+
       setProfileData({
         language: (user.language as Language) || "en",
         generation: (user.generation as Generation | "") || "",
-        sophisticationLevel: (user.sophisticationLevel as SophisticationLevel | "") || "",
-        addeparEntityId,
+        sophisticationLevel:
+          (user.sophisticationLevel as SophisticationLevel | "") || "",
+        addeparPortfolioId,
       });
     }
   }, [session]);
@@ -112,7 +120,7 @@ export default function DashboardPage() {
           language: profileData.language,
           generation: profileData.generation || null,
           sophisticationLevel: profileData.sophisticationLevel || null,
-          addeparEntityId: profileData.addeparEntityId || null,
+          addeparPortfolioId: profileData.addeparPortfolioId || null,
         }),
       });
 
@@ -122,10 +130,10 @@ export default function DashboardPage() {
       }
 
       const data = await response.json();
-      
+
       // Update session to reflect changes
       await update();
-      
+
       setProfileSaveMessage({
         type: "success",
         text: "Profile settings saved successfully!",
@@ -139,7 +147,10 @@ export default function DashboardPage() {
       console.error("Failed to save profile:", error);
       setProfileSaveMessage({
         type: "error",
-        text: error instanceof Error ? error.message : "Failed to save profile settings",
+        text:
+          error instanceof Error
+            ? error.message
+            : "Failed to save profile settings",
       });
     } finally {
       setSavingProfile(false);
@@ -519,7 +530,9 @@ export default function DashboardPage() {
                         onChange={(e) =>
                           setProfileData({
                             ...profileData,
-                            sophisticationLevel: e.target.value as SophisticationLevel | "",
+                            sophisticationLevel: e.target.value as
+                              | SophisticationLevel
+                              | "",
                           })
                         }
                         className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent transition-all bg-white"
@@ -545,28 +558,34 @@ export default function DashboardPage() {
 
                     <div className="flex flex-col">
                       <label className="block text-sm font-semibold text-gray-700 mb-2">
-                        Addepar Entity ID
+                        Addepar Portfolio ID
                       </label>
                       <div className="relative">
                         <input
-                          type={showAddeparEntityId ? "text" : "password"}
-                          value={profileData.addeparEntityId}
+                          type={showAddeparPortfolioId ? "text" : "password"}
+                          value={profileData.addeparPortfolioId}
                           onChange={(e) =>
                             setProfileData({
                               ...profileData,
-                              addeparEntityId: e.target.value,
+                              addeparPortfolioId: e.target.value,
                             })
                           }
-                          placeholder="Enter your Addepar Entity ID"
+                          placeholder="Enter your Addepar Portfolio ID"
                           className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent transition-all bg-white"
                         />
                         <button
                           type="button"
-                          onClick={() => setShowAddeparEntityId(!showAddeparEntityId)}
+                          onClick={() =>
+                            setShowAddeparPortfolioId(!showAddeparPortfolioId)
+                          }
                           className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none transition-colors"
-                          aria-label={showAddeparEntityId ? "Hide Entity ID" : "Show Entity ID"}
+                          aria-label={
+                            showAddeparPortfolioId
+                              ? "Hide Portfolio ID"
+                              : "Show Portfolio ID"
+                          }
                         >
-                          {showAddeparEntityId ? (
+                          {showAddeparPortfolioId ? (
                             <svg
                               className="w-5 h-5"
                               fill="none"
@@ -604,7 +623,8 @@ export default function DashboardPage() {
                         </button>
                       </div>
                       <p className="mt-1 text-sm text-gray-500">
-                        Your Addepar Entity ID is used to fetch portfolio data for portfolio briefings.
+                        Your Addepar Portfolio ID is used to fetch portfolio
+                        data for portfolio briefings.
                       </p>
                     </div>
 
