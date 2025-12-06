@@ -1,4 +1,57 @@
-<!-- fc164b9a-ecfb-4426-ac17-0d31d91459c1 881e3a70-2a1d-477c-aef8-2b98c56f23c3 -->
+---
+name: Technical Implementation Plan for Insight Studio
+overview: ""
+todos:
+  - id: 3794b7a4-9382-4dde-a367-760c9abb4479
+    content: Implement citation tracking system with source references and confidence scores
+    status: pending
+  - id: 5d1a3936-22d1-45f8-b6ab-99de3f37320c
+    content: Create content review database models and API endpoints
+    status: pending
+  - id: 2460c7c1-beef-46c2-92d8-be8ccad5f97d
+    content: Build advisor review UI with approve/reject/request-changes workflow
+    status: pending
+  - id: 5e8b8718-cce0-41ac-9304-abfbe2a5fa9a
+    content: Implement basic compliance guardrails (restricted terms, disclosures)
+    status: pending
+  - id: 7a3560b6-36c2-4e04-98c9-69f1974146ec
+    content: Build policy rules engine with tenant-specific configuration
+    status: pending
+  - id: aeca88c9-d2c5-44f9-a1f1-ce27dae4d26b
+    content: Implement multi-factor risk scoring system with automated routing
+    status: pending
+  - id: d2210c26-7216-43ca-8ba4-493794f9e12a
+    content: Create comprehensive audit logging system for compliance
+    status: pending
+  - id: 4c4fe1fe-817d-4662-8f96-c94f1bbbd442
+    content: Build market data ingestion pipeline with scheduled Azure Function
+    status: pending
+  - id: 0aa769ca-e352-42e6-9266-6fe41454d1c4
+    content: Implement vector indexing pipeline for RAG content with metadata
+    status: pending
+  - id: 825b547b-3999-4cbf-ba20-646a0289140e
+    content: Implement analytics event tracking and engagement metrics
+    status: pending
+  - id: c133c1d3-0e0c-4942-815e-455d4a8210f6
+    content: Build preference learning system based on user engagement
+    status: pending
+  - id: 0ff101b5-d5dc-462f-ac43-d464a899e949
+    content: Implement email delivery system with personalized templates
+    status: pending
+  - id: 95b88369-5952-424d-88c7-bf3ace768314
+    content: Build audio generation system using Azure Cognitive Services Speech
+    status: pending
+  - id: 4eeeb149-a96e-4081-873d-a4e241d7aa3c
+    content: Create multi-channel delivery orchestrator with format conversion
+    status: pending
+  - id: 1ad136f4-1b41-4def-bae5-a996af92de61
+    content: Implement interactive Q&A system with RAG-powered answers and guardrails
+    status: pending
+  - id: 0b7b921d-0a60-4dbb-bbfe-db74f419c3f2
+    content: Build A/B testing framework with variant assignment and tracking
+    status: pending
+---
+
 # Technical Implementation Plan for Insight Studio
 
 ## Executive Summary
@@ -705,22 +758,3 @@ See detailed Prisma schema updates in each sprint section above.
 ### API Endpoint Specifications
 
 Detailed API specifications will be documented in OpenAPI/Swagger format during implementation.
-
-### To-dos
-
-- [ ] Implement citation tracking system with source references and confidence scores
-- [ ] Create content review database models and API endpoints
-- [ ] Build advisor review UI with approve/reject/request-changes workflow
-- [ ] Implement basic compliance guardrails (restricted terms, disclosures)
-- [ ] Build policy rules engine with tenant-specific configuration
-- [ ] Implement multi-factor risk scoring system with automated routing
-- [ ] Create comprehensive audit logging system for compliance
-- [ ] Build market data ingestion pipeline with scheduled Azure Function
-- [ ] Implement vector indexing pipeline for RAG content with metadata
-- [ ] Implement analytics event tracking and engagement metrics
-- [ ] Build preference learning system based on user engagement
-- [ ] Implement email delivery system with personalized templates
-- [ ] Build audio generation system using Azure Cognitive Services Speech
-- [ ] Create multi-channel delivery orchestrator with format conversion
-- [ ] Implement interactive Q&A system with RAG-powered answers and guardrails
-- [ ] Build A/B testing framework with variant assignment and tracking

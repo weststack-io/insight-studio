@@ -18,6 +18,7 @@ export default function LessonsPage() {
     SophisticationLevel | "all"
   >("all");
   const [newTopic, setNewTopic] = useState("");
+  const [generating, setGenerating] = useState(false);
 
   useEffect(() => {
     if (session) {
@@ -55,11 +56,12 @@ export default function LessonsPage() {
   };
 
   const handleGenerateLesson = async () => {
-    if (!newTopic.trim()) {
+    if (!newTopic.trim() || generating) {
       return;
     }
 
     try {
+      setGenerating(true);
       const response = await fetch("/api/lessons", {
         method: "POST",
         headers: {
@@ -81,6 +83,8 @@ export default function LessonsPage() {
       }
     } catch (error) {
       console.error("Failed to generate lesson:", error);
+    } finally {
+      setGenerating(false);
     }
   };
 
@@ -129,16 +133,20 @@ export default function LessonsPage() {
               type="text"
               value={newTopic}
               onChange={(e) => setNewTopic(e.target.value)}
-              onKeyPress={(e) => e.key === "Enter" && handleGenerateLesson()}
+              onKeyPress={(e) => e.key === "Enter" && !generating && handleGenerateLesson()}
               placeholder="Enter lesson topic"
-              className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+              disabled={generating}
+              className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-50 disabled:cursor-not-allowed"
             />
             <button
               onClick={handleGenerateLesson}
-              disabled={!newTopic.trim()}
-              className="px-6 py-2 bg-primary text-white rounded-lg hover:bg-opacity-90 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled={!newTopic.trim() || generating}
+              className="px-6 py-2 bg-primary text-white rounded-lg hover:bg-opacity-90 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
             >
-              Generate
+              {generating && (
+                <div className="inline-block animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
+              )}
+              {generating ? "Generating..." : "Generate"}
             </button>
           </div>
         </div>

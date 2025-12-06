@@ -31,8 +31,11 @@ export function ExplainerView({ explainer, onGenerate }: ExplainerViewProps) {
         <button
           onClick={handleRegenerate}
           disabled={loading}
-          className="px-3 py-1 text-sm bg-gray-200 text-gray-700 rounded hover:bg-gray-300 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+          className="px-3 py-1 text-sm bg-gray-200 text-gray-700 rounded hover:bg-gray-300 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
         >
+          {loading && (
+            <div className="inline-block animate-spin rounded-full h-3 w-3 border-2 border-gray-700 border-t-transparent"></div>
+          )}
           {loading ? 'Regenerating...' : 'Regenerate'}
         </button>
       </div>

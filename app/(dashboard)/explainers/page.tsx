@@ -112,14 +112,16 @@ export default function ExplainersPage() {
               type="text"
               value={topic}
               onChange={(e) => setTopic(e.target.value)}
-              onKeyPress={(e) => e.key === "Enter" && handleSearch()}
+              onKeyPress={(e) => e.key === "Enter" && !loading && handleSearch()}
               placeholder="Search for a topic (e.g., CSBS, Carried Interest)"
-              className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+              disabled={loading}
+              className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-50 disabled:cursor-not-allowed"
             />
             <select
               value={language}
               onChange={(e) => setLanguage(e.target.value as Language)}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+              disabled={loading}
+              className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <option value="en">English</option>
               <option value="es">Spanish</option>
@@ -131,9 +133,12 @@ export default function ExplainersPage() {
             <button
               onClick={() => handleSearch()}
               disabled={loading || !topic.trim()}
-              className="px-6 py-2 bg-primary text-white rounded-lg hover:bg-opacity-90 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-6 py-2 bg-primary text-white rounded-lg hover:bg-opacity-90 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
             >
-              {loading ? "Loading..." : "Search"}
+              {loading && (
+                <div className="inline-block animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
+              )}
+              {loading ? "Searching..." : "Search"}
             </button>
           </div>
 
@@ -144,7 +149,8 @@ export default function ExplainersPage() {
                 <button
                   key={popularTopic}
                   onClick={() => handleSearch(popularTopic)}
-                  className="px-3 py-1 text-sm bg-gray-200 text-gray-700 rounded-full hover:bg-gray-300 cursor-pointer"
+                  disabled={loading}
+                  className="px-3 py-1 text-sm bg-gray-200 text-gray-700 rounded-full hover:bg-gray-300 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {popularTopic}
                 </button>

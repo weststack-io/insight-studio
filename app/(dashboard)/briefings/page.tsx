@@ -11,6 +11,8 @@ export default function BriefingsPage() {
   const [briefings, setBriefings] = useState<Briefing[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<BriefingType | "all">("all");
+  const [generating, setGenerating] = useState<BriefingType | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (session) {
@@ -37,7 +39,13 @@ export default function BriefingsPage() {
   };
 
   const generateBriefing = async (type: BriefingType) => {
+    if (generating) {
+      return;
+    }
+
     try {
+      setGenerating(type);
+      setError(null);
       const response = await fetch("/api/briefings", {
         method: "POST",
         headers: {
@@ -46,11 +54,32 @@ export default function BriefingsPage() {
         body: JSON.stringify({ type }),
       });
 
-      if (response.ok) {
-        await fetchBriefings();
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || "Failed to generate briefing");
+      }
+
+      const data = await response.json();
+      if (data.briefing) {
+        // Refresh briefings list without showing full page loading
+        const params = new URLSearchParams();
+        if (filter !== "all") {
+          params.append("type", filter);
+        }
+        const fetchResponse = await fetch(`/api/briefings?${params.toString()}`);
+        const fetchData = await fetchResponse.json();
+        setBriefings(fetchData.briefings || []);
+        
+        // If filter doesn't match the generated type, switch to show it
+        if (filter !== "all" && filter !== type) {
+          setFilter(type);
+        }
       }
     } catch (error) {
       console.error("Failed to generate briefing:", error);
+      setError(error instanceof Error ? error.message : "Failed to generate briefing");
+    } finally {
+      setGenerating(null);
     }
   };
 
@@ -94,18 +123,51 @@ export default function BriefingsPage() {
           <div className="flex gap-2">
             <button
               onClick={() => generateBriefing("market")}
-              className="px-4 py-2 bg-primary text-white rounded hover:bg-opacity-90 cursor-pointer"
+              disabled={generating !== null}
+              className="px-4 py-2 bg-primary text-white rounded hover:bg-opacity-90 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
             >
-              Generate Market Briefing
+              {generating === "market" && (
+                <div className="inline-block animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
+              )}
+              {generating === "market" ? "Generating..." : "Generate Market Briefing"}
             </button>
             <button
               onClick={() => generateBriefing("portfolio")}
-              className="px-4 py-2 bg-secondary text-white rounded hover:bg-opacity-90 cursor-pointer"
+              disabled={generating !== null}
+              className="px-4 py-2 bg-secondary text-white rounded hover:bg-opacity-90 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
             >
-              Generate Portfolio Briefing
+              {generating === "portfolio" && (
+                <div className="inline-block animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
+              )}
+              {generating === "portfolio" ? "Generating..." : "Generate Portfolio Briefing"}
             </button>
           </div>
         </div>
+
+        {error && (
+          <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700">
+            <div className="flex justify-between items-center">
+              <span>{error}</span>
+              <button
+                onClick={() => setError(null)}
+                className="text-red-700 hover:text-red-900 font-bold"
+              >
+                ×
+              </button>
+            </div>
+          </div>
+        )}
+
+        {generating && (
+          <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg text-blue-700">
+            <div className="flex items-center gap-2">
+              <div className="inline-block animate-spin rounded-full h-4 w-4 border-2 border-blue-700 border-t-transparent"></div>
+              <span>
+                Generating {generating === "market" ? "Market" : "Portfolio"} Briefing... This may take a moment.
+              </span>
+            </div>
+          </div>
+        )}
 
         <div className="mb-4">
           <div className="flex gap-2">
