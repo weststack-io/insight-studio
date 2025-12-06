@@ -25,6 +25,7 @@ model Tenant {
   briefings  Briefing[]
   explainers Explainer[]
   lessons    Lesson[]
+  contentSources ContentSource[]
 
   @@map("tenants")
 }
@@ -50,6 +51,8 @@ model User {
   userPreferences UserPreference[]
   accounts      Account[]
   sessions      Session[]
+  contentReviews ContentReview[]
+  reviewedBriefings Briefing[] @relation("Reviewer")
 
   @@map("users")
 }
@@ -105,12 +108,21 @@ model Briefing {
   content       String   @db.NVarChar(Max) // JSON or text content
   generatedAt   DateTime @default(now()) @map("generated_at")
   weekStartDate DateTime @map("week_start_date")
+  status        String   @default("draft") // draft, pending_review, approved, published
+  version       Int      @default(1)
+  reviewerId    String?  @map("reviewer_id")
+  reviewedAt    DateTime? @map("reviewed_at")
+  citations     String?  @db.NVarChar(Max) // JSON array of citations
+  riskScore     Float?   @map("risk_score")
+  requiresReview Boolean @default(false) @map("requires_review")
 
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
   tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  reviewer User? @relation("Reviewer", fields: [reviewerId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@index([userId, weekStartDate])
   @@index([tenantId, weekStartDate])
+  @@index([status])
   @@map("briefings")
 }
 
@@ -122,11 +134,15 @@ model Explainer {
   language    String   @default("en")
   generatedAt DateTime @default(now()) @map("generated_at")
   cached      Boolean  @default(true)
+  citations   String?  @db.NVarChar(Max) // JSON array of citations
+  riskScore   Float?   @map("risk_score")
+  requiresReview Boolean @default(false) @map("requires_review")
 
   tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   @@unique([tenantId, topic, language])
   @@index([tenantId, topic])
+  @@index([riskScore])
   @@map("explainers")
 }
 
@@ -139,11 +155,15 @@ model Lesson {
   language          String   @default("en")
   sophisticationLevel String? @map("sophistication_level")
   generatedAt       DateTime @default(now()) @map("generated_at")
+  citations         String?  @db.NVarChar(Max) // JSON array of citations
+  riskScore         Float?   @map("risk_score")
+  requiresReview    Boolean  @default(false) @map("requires_review")
 
   tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   @@index([tenantId, generation, language])
   @@index([tenantId, topic])
+  @@index([riskScore])
   @@map("lessons")
 }
 
@@ -160,5 +180,77 @@ model UserPreference {
   @@unique([userId, topic])
   @@index([userId])
   @@map("user_preferences")
+}
+
+model ContentReview {
+  id          String   @id @default(uuid())
+  contentId   String   @map("content_id")
+  contentType String   @map("content_type") // briefing, explainer, lesson
+  status      String   // pending_review, approved, rejected, changes_requested
+  reviewerId  String?  @map("reviewer_id")
+  reviewedAt  DateTime? @map("reviewed_at")
+  comments    String?  @db.NVarChar(Max)
+  version     Int      @default(1)
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  reviewer User? @relation(fields: [reviewerId], references: [id], onDelete: NoAction)
+
+  @@index([contentId, contentType])
+  @@index([status])
+  @@index([reviewerId])
+  @@map("content_reviews")
+}
+
+model ContentSource {
+  id              String   @id @default(uuid())
+  type            String   // research, news, market_data, document
+  title           String
+  url             String?  @db.NVarChar(Max)
+  date            DateTime?
+  reliabilityScore Float?  @map("reliability_score") // 0-1
+  tags            String?  @db.NVarChar(Max) // JSON array of tags
+  tenantId        String?  @map("tenant_id")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  tenant Tenant? @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  citations Citation[]
+
+  @@index([tenantId])
+  @@index([type])
+  @@map("content_sources")
+}
+
+model Citation {
+  id              String   @id @default(uuid())
+  contentId       String   @map("content_id")
+  contentType     String   @map("content_type") // briefing, explainer, lesson
+  sourceId        String?  @map("source_id")
+  text            String   @db.NVarChar(Max)
+  confidenceScore Float    @map("confidence_score") // 0-1
+  position        Int?     // Position in content (character offset or section index)
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  source ContentSource? @relation(fields: [sourceId], references: [id], onDelete: SetNull)
+
+  @@index([contentId, contentType])
+  @@index([sourceId])
+  @@map("citations")
+}
+
+model ContentVersion {
+  id          String   @id @default(uuid())
+  contentId   String   @map("content_id")
+  contentType String   @map("content_type") // briefing, explainer, lesson
+  version     Int
+  content     String   @db.NVarChar(Max)
+  generatedAt DateTime @default(now()) @map("generated_at")
+  status      String   @default("draft") // draft, pending_review, approved, published
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  @@unique([contentId, contentType, version])
+  @@index([contentId, contentType])
+  @@map("content_versions")
 }
 

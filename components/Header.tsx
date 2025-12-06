@@ -11,6 +11,7 @@ const NAV_ITEMS = [
   { href: "/briefings", label: "Briefings" },
   { href: "/explainers", label: "Explainers" },
   { href: "/lessons", label: "Lessons" },
+  { href: "/reviews", label: "Reviews" },
 ];
 
 interface Tenant {
