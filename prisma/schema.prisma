@@ -27,6 +27,8 @@ model Tenant {
   lessons    Lesson[]
   contentSources ContentSource[]
   policies   Policy[]
+  marketData MarketData[]
+  houseViews HouseView[]
 
   @@map("tenants")
 }
@@ -217,6 +219,7 @@ model ContentSource {
 
   tenant Tenant? @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   citations Citation[]
+  metadata SourceMetadata[]
 
   @@index([tenantId])
   @@index([type])
@@ -270,5 +273,69 @@ model Policy {
   @@unique([tenantId, name])
   @@index([tenantId, type])
   @@map("policies")
+}
+
+model MarketData {
+  id        String   @id @default(uuid())
+  type      String   // equity, bond, commodity, currency, macro, etc.
+  source    String   // alpha_maven, etc.
+  data      String   @db.NVarChar(Max) // JSON data
+  date      DateTime
+  tenantId  String?  @map("tenant_id")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  tenant Tenant? @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, date])
+  @@index([type, date])
+  @@index([source, date])
+  @@map("market_data")
+}
+
+model ContentIngestion {
+  id          String   @id @default(uuid())
+  sourceType  String   @map("source_type") // market_data, rss, pdf, etc.
+  status      String   // active, paused, error
+  lastRun     DateTime? @map("last_run")
+  nextRun     DateTime? @map("next_run")
+  config      String   @db.NVarChar(Max) // JSON configuration
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@index([sourceType, status])
+  @@index([nextRun])
+  @@map("content_ingestion")
+}
+
+model SourceMetadata {
+  id        String   @id @default(uuid())
+  sourceId  String   @map("source_id") // References ContentSource.id
+  key       String
+  value     String   @db.NVarChar(Max)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  source ContentSource @relation(fields: [sourceId], references: [id], onDelete: Cascade)
+
+  @@unique([sourceId, key])
+  @@index([sourceId])
+  @@map("source_metadata")
+}
+
+model HouseView {
+  id          String   @id @default(uuid())
+  tenantId    String   @map("tenant_id")
+  title       String
+  content     String   @db.NVarChar(Max)
+  version     Int      @default(1)
+  isActive    Boolean  @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, isActive])
+  @@map("house_views")
 }
 
