@@ -26,6 +26,7 @@ model Tenant {
   explainers Explainer[]
   lessons    Lesson[]
   contentSources ContentSource[]
+  policies   Policy[]
 
   @@map("tenants")
 }
@@ -252,5 +253,22 @@ model ContentVersion {
   @@unique([contentId, contentType, version])
   @@index([contentId, contentType])
   @@map("content_versions")
+}
+
+model Policy {
+  id            String   @id @default(uuid())
+  tenantId      String   @map("tenant_id")
+  name          String
+  type          String   // prohibited_terms, required_disclosures, content_restrictions, risk_thresholds
+  config        String   @db.NVarChar(Max) // JSON configuration
+  enabled       Boolean  @default(true)
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, name])
+  @@index([tenantId, type])
+  @@map("policies")
 }
 

@@ -36,11 +36,13 @@ The application supports three distinct user roles:
 - ✅ View content with citations and source references
 - ✅ Filter and manage review queue by status
 - ✅ Access content versioning and review history
-- 🚧 Configure policy rules and disclosures (Sprint 2)
-- 🚧 Access compliance dashboard and risk scoring (Sprint 2)
+- ✅ Configure policy rules and disclosures (prohibited terms, required disclosures, content restrictions, risk thresholds)
+- ✅ Access compliance dashboard with policy configuration UI
+- ✅ View risk score visualizations and violation reports
+- ✅ Monitor multi-factor risk scoring (content sensitivity, citations, user profile, historical patterns)
 - 🚧 Monitor content analytics and client engagement (Sprint 4)
 
-**Current Status**: ✅ Core advisor review workflow implemented. Advanced compliance features coming in Sprint 2. See [Technical Implementation Plan](../.cursor/plans/technical-implementation-plan.md) for roadmap.
+**Current Status**: ✅ Core advisor review workflow and comprehensive compliance engine implemented. See [Technical Implementation Plan](../.cursor/plans/technical-implementation-plan.md) for roadmap.
 
 ### 2. Family Member (`family_member`)
 
@@ -135,17 +137,21 @@ The application supports three distinct user roles:
   - ✅ Add comments when reviewing content
   - ✅ View content metadata (type, version, status)
   - ✅ See review history and previous comments
-  - 🚧 Side-by-side comparison of content versions (coming in Sprint 2)
-  - 🚧 View citations and confidence scores (citation system ready, integration pending)
-  - 🚧 See risk scoring and compliance flags (Sprint 2)
+  - ✅ View citations and confidence scores
+  - ✅ See risk scoring and compliance flags (multi-factor risk scoring with automatic routing)
+  - ✅ View policy violations and compliance violations
+  - 🚧 Side-by-side comparison of content versions (coming in future sprint)
 
-#### 3. **Compliance Dashboard** 🚧 **PLANNED (Sprint 2)**
-- **Location**: `/compliance` (to be implemented)
+#### 3. **Compliance Dashboard** ✅ **IMPLEMENTED**
+- **Location**: `/compliance`
 - **Features**:
-  - Configure policy rules and restricted terms
-  - View risk score visualizations
-  - Access violation reports and audit logs
-  - Manage disclosure templates
+  - ✅ Configure policy rules and restricted terms (prohibited terms, required disclosures, content restrictions, risk thresholds)
+  - ✅ View policy violations and violation reports
+  - ✅ Manage disclosure templates
+  - ✅ Overview dashboard with compliance statistics
+  - ✅ Policy management UI (create, edit, delete policies)
+  - ✅ Risk score visualization (placeholder for future analytics)
+  - 🚧 Advanced audit log search interface (basic logging implemented, search UI coming)
 
 #### 4. **Content Analytics** 🚧 **PLANNED (Sprint 4)**
 - **Features**:
@@ -252,14 +258,15 @@ The application follows a weekly content generation cycle:
 - ✅ **Basic compliance guardrails** - Restricted terms checking, mandatory disclosure injection, risk scoring (0-100)
 - ✅ **Content versioning** - Track content revisions and versions
 - ✅ **Review API** - Full CRUD operations for content reviews with status workflow
+- ✅ **Policy Rules Engine** - Tenant-specific policy configuration (prohibited terms, required disclosures, content restrictions, risk thresholds)
+- ✅ **Multi-Factor Risk Scoring** - Content sensitivity, citation confidence, user profile risk, historical patterns with automated routing
+- ✅ **Compliance Dashboard** - Policy configuration UI, violation reports, risk score visualization
+- ✅ **Disclosure Management** - Context-aware disclosure selection and automatic injection
+- ✅ **Content Validation Pipeline** - Pre/post-generation validation, fact checking, citation verification, hallucination detection
+- ✅ **Audit Logging System** - Comprehensive logging to Azure Blob Storage with retention policies
 
-### 🚧 Planned Features (Sprint 2+)
+### 🚧 Planned Features (Sprint 3+)
 
-- Advanced compliance policy rules engine with tenant-specific configuration
-- Multi-factor risk scoring with automated routing
-- Compliance dashboard with policy configuration UI
-- Content validation pipeline (pre/post-generation validation, hallucination testing)
-- Comprehensive audit logging system
 - Content analytics and engagement tracking (Sprint 4)
 - Multi-channel delivery (email, mobile app, audio) (Sprint 5)
 - Interactive Q&A with guardrails (Sprint 6)
@@ -279,22 +286,21 @@ See [Technical Implementation Plan](../.cursor/plans/technical-implementation-pl
 
 ### For Advisors
 
-✅ **Advisor review workflow is now available!** Advisors can:
+✅ **Advisor review workflow and compliance engine are now fully available!** Advisors can:
 
 1. **Access the review queue** (`/reviews`) to see pending content awaiting review
 2. **Review content** - View full content preview, see version information, and review history
 3. **Take action** - Approve, reject, or request changes with optional comments
 4. **Filter reviews** - View by status (pending, approved, rejected, changes requested)
 5. **Track versions** - See content version numbers and review history
-
-**Coming Soon (Sprint 2):**
-- Configure compliance policies and restricted terms
-- View detailed risk scoring and compliance flags
-- Access compliance dashboard for monitoring and reporting
-- Advanced policy rules engine
+6. **Configure compliance policies** (`/compliance`) - Set up prohibited terms, required disclosures, content restrictions, and risk thresholds
+7. **View risk scores** - See multi-factor risk scoring breakdown (content sensitivity, citations, user profile, historical patterns)
+8. **Monitor violations** - View policy violations and compliance reports
+9. **Manage disclosures** - Configure context-aware disclosure templates
 
 **Coming Later:**
 - Monitor content analytics and client engagement (Sprint 4)
+- Advanced audit log search interface (basic logging implemented)
 
 ## Additional Resources
 

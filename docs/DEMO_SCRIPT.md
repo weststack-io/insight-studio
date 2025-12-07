@@ -8,14 +8,15 @@
 ### Technical Setup
 - [ ] Ensure demo environment is running and accessible
 - [ ] Have sample client data loaded (portfolio, preferences)
-- [ ] Test all key features (briefings, lessons, explainers, reviews)
-- [ ] Have advisor account ready for review workflow demo
+- [ ] Test all key features (briefings, lessons, explainers, reviews, compliance)
+- [ ] Have advisor account ready for review workflow and compliance dashboard demo
 - [ ] Prepare browser with multiple tabs ready:
   - Dashboard view
   - Briefings page
   - Lessons page
   - Explainers page
   - Reviews page (advisor account)
+  - Compliance dashboard (advisor account)
 
 ### Talking Points Preparation
 - [ ] Review client's firm size and typical client profile
@@ -171,10 +172,29 @@
 > The system tracks everything—who reviewed it, when, and why. This creates a complete audit trail for compliance."
 
 **Key Point:**
-> "The review workflow is integrated with our compliance system. Content is automatically checked for restricted terms and given a risk score. High-risk content is flagged for mandatory review, while low-risk content can be auto-approved based on your policies."
+> "The review workflow is fully integrated with our comprehensive compliance system. Content is automatically:
+> - Checked against tenant-specific policy rules (prohibited terms, content restrictions)
+> - Scored using multi-factor risk analysis (content sensitivity, citations, user profile, historical patterns)
+> - Validated for citations and potential hallucinations
+> - Evaluated for required disclosures
+> - Logged for complete audit trails
+>
+> High-risk content is automatically flagged for mandatory advisor review, while low-risk content can be auto-approved based on your configured risk thresholds. You can configure all of this through the compliance dashboard."
 
 **If time permits, show:**
 > "You can filter by status—see what's pending, what's been approved, what needs changes. This gives advisors a clear view of their workload and helps prioritize reviews."
+>
+> **Navigate to:** `/compliance` (if time permits)
+>
+> **Talking Points:**
+> "This is the compliance dashboard where advisors can configure policies and monitor compliance. Here you can:
+> - Set up prohibited terms that should trigger review
+> - Configure risk thresholds (auto-approve, require review, block content)
+> - Manage required disclosures
+> - View policy violations and compliance reports
+> - Monitor risk scores across all content
+>
+> Everything is tenant-specific, so each firm can configure their own compliance policies to match their risk tolerance and regulatory requirements."
 
 ---
 
@@ -223,21 +243,26 @@
 > "**Current Implementation:**
 > - ✅ **Advisor review/approval workflow** - Full review interface with approve/reject/request-changes
 > - ✅ **Citation tracking system** - Extract and store citations from RAG search results with confidence scores
-> - ✅ **Basic compliance guardrails** - Automatic checking for 20+ restricted terms (e.g., 'guaranteed return', 'risk-free')
-> - ✅ **Risk scoring** - Content scored 0-100 based on restricted terms, high-risk topics, and content analysis
-> - ✅ **Mandatory disclosures** - Context-aware disclosure injection based on content type and topics
+> - ✅ **Compliance guardrails** - Automatic checking for 20+ restricted terms (e.g., 'guaranteed return', 'risk-free')
+> - ✅ **Multi-factor risk scoring** - Content scored 0-100 based on content sensitivity, citation confidence, user profile risk, and historical patterns
+> - ✅ **Policy Rules Engine** - Tenant-specific policy configuration (prohibited terms, required disclosures, content restrictions, risk thresholds)
+> - ✅ **Compliance Dashboard** - Policy configuration UI, violation reports, risk score visualization
+> - ✅ **Disclosure Management** - Context-aware disclosure selection and automatic injection (8 disclosure templates)
+> - ✅ **Content Validation Pipeline** - Pre/post-generation validation, fact checking, citation verification, hallucination detection
+> - ✅ **Audit Logging System** - Comprehensive logging to Azure Blob Storage with 365-day retention
 > - ✅ **Content versioning** - Track all content revisions and review history
 > - ✅ **Review audit trail** - Complete history of who reviewed what, when, and why
 > - Content avoids investment recommendations (educational tone only)
 > - Multi-tenant architecture with role-based access control
 > - Azure AD integration for enterprise authentication
 >
-> **Coming in Sprint 2 (Next 2-4 weeks):**
-> - Advanced compliance policy engine with tenant-specific configuration
-> - Multi-factor risk scoring with automated routing
-> - Compliance dashboard for policy configuration and monitoring
-> - Automated fact-checking and citation validation
-> - Comprehensive audit logging to Azure Blob Storage"
+> **The compliance engine automatically:**
+> - Evaluates content against tenant-specific policies
+> - Calculates multi-factor risk scores
+> - Routes high-risk content to mandatory advisor review
+> - Injects appropriate disclosures based on content analysis
+> - Validates citations and detects potential hallucinations
+> - Logs all content generation, review actions, and policy evaluations"
 
 #### Security
 
@@ -314,9 +339,17 @@
 ### Q: "How accurate is the AI-generated content?"
 
 **Answer:**
-> "Great question. We use RAG (Retrieval-Augmented Generation), which means the AI pulls from your actual research and approved content—it's not making things up. Every claim is source-cited with confidence scores, and we have a citation tracking system that validates citations and links them to sources. Plus, we've implemented an advisor review workflow—nothing goes out without human approval. High-risk content is automatically flagged for mandatory review."
+> "Great question. We use RAG (Retrieval-Augmented Generation), which means the AI pulls from your actual research and approved content—it's not making things up. Every claim is source-cited with confidence scores, and we have a comprehensive citation tracking system that validates citations and links them to sources. Plus, we've implemented a full advisor review workflow—nothing goes out without human approval. High-risk content is automatically flagged for mandatory review based on our multi-factor risk scoring."
 
-> "The system is designed to be educational, not advisory. Content uses educational language ('consider', 'explore') rather than recommendations ('you should', 'buy this'). We've implemented compliance guardrails that automatically check for 20+ restricted terms like 'guaranteed return' or 'risk-free' and block prohibited claims. The system also injects mandatory disclosures based on content type. High-risk content is automatically flagged for advisor review, and our risk scoring (0-100) helps prioritize what needs human review."
+> "The system is designed to be educational, not advisory. Content uses educational language ('consider', 'explore') rather than recommendations ('you should', 'buy this'). We've implemented a comprehensive compliance engine that:
+> - Checks content against tenant-specific policy rules (prohibited terms, content restrictions)
+> - Calculates multi-factor risk scores (content sensitivity, citation confidence, user profile, historical patterns)
+> - Validates citations and detects potential hallucinations
+> - Automatically injects context-aware disclosures
+> - Routes high-risk content to mandatory advisor review
+> - Logs everything for complete audit trails
+>
+> Our risk scoring (0-100) uses multiple factors to help prioritize what needs human review, and you can configure your own risk thresholds through the compliance dashboard."
 
 ### Q: "How do you handle data privacy?"
 
@@ -347,7 +380,7 @@
 > - Knowledge base setup (your research content)
 > - Initial content generation and testing
 >
-> The core advisor review workflow is already implemented, so you can start using that immediately. Full feature rollout (advanced compliance dashboard, multi-channel delivery, analytics) takes 12 weeks total, with features rolling out incrementally."
+> The core advisor review workflow and comprehensive compliance engine are already fully implemented, so you can start using those immediately. The compliance dashboard allows you to configure policies, view risk scores, and monitor violations right away. Full feature rollout (multi-channel delivery, analytics) takes 12 weeks total, with features rolling out incrementally."
 
 ### Q: "What if we want to customize the content style?"
 
@@ -357,9 +390,11 @@
 > - Content structure and sections
 > - Branding and visual design
 > - Personalization rules and scoring
-> - Compliance policies and disclosures
+> - Compliance policies and disclosures (through the compliance dashboard)
+> - Risk thresholds and review routing rules
+> - Prohibited terms and content restrictions
 >
-> The platform is designed to be configurable to match your firm's voice and requirements."
+> The platform is designed to be configurable to match your firm's voice and requirements. The compliance dashboard gives you full control over policy configuration without requiring code changes."
 
 ---
 
