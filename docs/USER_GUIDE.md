@@ -30,15 +30,17 @@ The application supports three distinct user roles:
 
 **Purpose**: Wealth advisors who create, review, and approve content for clients.
 
-**Capabilities** (Planned):
-- Review and approve generated briefings, lessons, and explainers
-- Redline content and request revisions
-- Access compliance dashboard and risk scoring
-- Configure policy rules and disclosures
-- Monitor content analytics and client engagement
-- Manage content versioning and audit trails
+**Capabilities**:
+- ✅ Review and approve generated briefings, lessons, and explainers
+- ✅ Request changes or reject content with comments
+- ✅ View content with citations and source references
+- ✅ Filter and manage review queue by status
+- ✅ Access content versioning and review history
+- 🚧 Configure policy rules and disclosures (Sprint 2)
+- 🚧 Access compliance dashboard and risk scoring (Sprint 2)
+- 🚧 Monitor content analytics and client engagement (Sprint 4)
 
-**Current Status**: Advisor review workflow is planned but not yet implemented. See [Technical Implementation Plan](../.cursor/plans/technical-implementation-plan-fc164b9a.plan.md) for roadmap.
+**Current Status**: ✅ Core advisor review workflow implemented. Advanced compliance features coming in Sprint 2. See [Technical Implementation Plan](../.cursor/plans/technical-implementation-plan.md) for roadmap.
 
 ### 2. Family Member (`family_member`)
 
@@ -115,24 +117,29 @@ The application supports three distinct user roles:
   - Configure investment sophistication level (beginner, intermediate, advanced)
   - View role and email (read-only)
 
-### For Wealth Advisors (Planned)
+### For Wealth Advisors
 
-#### 1. **Review Queue** (Planned)
-- **Location**: `/reviews` (to be implemented)
+#### 1. **Review Queue** ✅ **IMPLEMENTED**
+- **Location**: `/reviews`
 - **Features**:
-  - View pending content awaiting review
-  - Filter by content type, risk score, or client
-  - See content status (draft, pending_review, approved, published)
+  - ✅ View pending content awaiting review
+  - ✅ Filter by review status (pending, approved, rejected, changes requested)
+  - ✅ See content status (draft, pending_review, approved, published)
+  - ✅ View content type (briefing, explainer, lesson) and version number
+  - ✅ See reviewer information and review timestamps
 
-#### 2. **Content Review Interface** (Planned)
+#### 2. **Content Review Interface** ✅ **IMPLEMENTED**
 - **Features**:
-  - Side-by-side comparison of content versions
-  - Approve, reject, or request changes
-  - Add comments and redlines
-  - View citations and confidence scores
-  - See risk scoring and compliance flags
+  - ✅ View full content preview in review modal
+  - ✅ Approve, reject, or request changes with one click
+  - ✅ Add comments when reviewing content
+  - ✅ View content metadata (type, version, status)
+  - ✅ See review history and previous comments
+  - 🚧 Side-by-side comparison of content versions (coming in Sprint 2)
+  - 🚧 View citations and confidence scores (citation system ready, integration pending)
+  - 🚧 See risk scoring and compliance flags (Sprint 2)
 
-#### 3. **Compliance Dashboard** (Planned)
+#### 3. **Compliance Dashboard** 🚧 **PLANNED (Sprint 2)**
 - **Location**: `/compliance` (to be implemented)
 - **Features**:
   - Configure policy rules and restricted terms
@@ -140,7 +147,7 @@ The application supports three distinct user roles:
   - Access violation reports and audit logs
   - Manage disclosure templates
 
-#### 4. **Content Analytics** (Planned)
+#### 4. **Content Analytics** 🚧 **PLANNED (Sprint 4)**
 - **Features**:
   - View engagement metrics (open rates, time spent, topic clicks)
   - Monitor client preferences and behavior
@@ -221,11 +228,11 @@ The application follows a weekly content generation cycle:
 
 1. **Data Refresh**: Market and portfolio data is updated
 2. **Candidate Generation**: Briefings are drafted per client segment
-3. **Validation**: Automatic checks for facts, sources, and restricted terms
-4. **Risk Scoring**: Content is scored to determine if advisor review is needed
-5. **Advisor Review**: (Planned) Advisors review, redline, approve, or request revisions
+3. **Validation**: ✅ Automatic checks for restricted terms and compliance guardrails
+4. **Risk Scoring**: ✅ Basic risk scoring (0-100) determines if advisor review is needed
+5. **Advisor Review**: ✅ **IMPLEMENTED** - Advisors review, approve, reject, or request changes with comments
 6. **Delivery**: Content is pushed to clients via selected channels
-7. **Feedback Loop**: Engagement data is captured to update preferences
+7. **Feedback Loop**: Engagement data is captured to update preferences (Sprint 4)
 
 ## Current Implementation Status
 
@@ -240,17 +247,23 @@ The application follows a weekly content generation cycle:
 - Portfolio data integration with Addepar
 - Weekly briefings Azure Function (scheduled)
 - Database schema with user roles
+- ✅ **Advisor review/approval workflow** - Review queue, approve/reject/request-changes with comments
+- ✅ **Citation tracking system** - Extract, store, and validate citations from RAG search results
+- ✅ **Basic compliance guardrails** - Restricted terms checking, mandatory disclosure injection, risk scoring (0-100)
+- ✅ **Content versioning** - Track content revisions and versions
+- ✅ **Review API** - Full CRUD operations for content reviews with status workflow
 
-### 🚧 Planned Features
+### 🚧 Planned Features (Sprint 2+)
 
-- Advisor review/approval workflow with audit trail
-- Citation tracking and source validation
-- Compliance guardrails and policy rules engine
-- Content analytics and engagement tracking
-- Multi-channel delivery (email, mobile app, audio)
-- Interactive Q&A with guardrails
-- A/B testing framework
-- Risk scoring and automated content validation
+- Advanced compliance policy rules engine with tenant-specific configuration
+- Multi-factor risk scoring with automated routing
+- Compliance dashboard with policy configuration UI
+- Content validation pipeline (pre/post-generation validation, hallucination testing)
+- Comprehensive audit logging system
+- Content analytics and engagement tracking (Sprint 4)
+- Multi-channel delivery (email, mobile app, audio) (Sprint 5)
+- Interactive Q&A with guardrails (Sprint 6)
+- A/B testing framework (Sprint 6)
 
 See [Technical Implementation Plan](../.cursor/plans/technical-implementation-plan-fc164b9a.plan.md) for detailed roadmap.
 
@@ -266,16 +279,27 @@ See [Technical Implementation Plan](../.cursor/plans/technical-implementation-pl
 
 ### For Advisors
 
-The advisor interface is currently in development. Once implemented, advisors will be able to:
-1. Access the review queue to see pending content
-2. Review and approve content before delivery
-3. Configure compliance policies
-4. Monitor content analytics
+✅ **Advisor review workflow is now available!** Advisors can:
+
+1. **Access the review queue** (`/reviews`) to see pending content awaiting review
+2. **Review content** - View full content preview, see version information, and review history
+3. **Take action** - Approve, reject, or request changes with optional comments
+4. **Filter reviews** - View by status (pending, approved, rejected, changes requested)
+5. **Track versions** - See content version numbers and review history
+
+**Coming Soon (Sprint 2):**
+- Configure compliance policies and restricted terms
+- View detailed risk scoring and compliance flags
+- Access compliance dashboard for monitoring and reporting
+- Advanced policy rules engine
+
+**Coming Later:**
+- Monitor content analytics and client engagement (Sprint 4)
 
 ## Additional Resources
 
 - [Functional Requirements](./FUNCTIONAL_REQUIREMENTS.md) - Complete feature specifications
-- [Technical Implementation Plan](../.cursor/plans/technical-implementation-plan-fc164b9a.plan.md) - Development roadmap
+- [Technical Implementation Plan](../.cursor/plans/technical-implementation-plan.md) - Development roadmap
 - [Setup Guide](../SETUP.md) - Environment setup and configuration
 - [Theme Configuration](./THEME_CONFIGURATION.md) - Multi-tenant branding setup
 

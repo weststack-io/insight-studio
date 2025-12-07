@@ -8,12 +8,14 @@
 ### Technical Setup
 - [ ] Ensure demo environment is running and accessible
 - [ ] Have sample client data loaded (portfolio, preferences)
-- [ ] Test all key features (briefings, lessons, explainers)
+- [ ] Test all key features (briefings, lessons, explainers, reviews)
+- [ ] Have advisor account ready for review workflow demo
 - [ ] Prepare browser with multiple tabs ready:
   - Dashboard view
   - Briefings page
   - Lessons page
   - Explainers page
+  - Reviews page (advisor account)
 
 ### Talking Points Preparation
 - [ ] Review client's firm size and typical client profile
@@ -41,7 +43,7 @@
 > "That's a common challenge. Insight Studio transforms how you educate clients. Instead of generic newsletters, each client receives personalized briefings that explain market moves in the context of their actual portfolio, plus on-demand educational content on topics like QSBS, estate planning, or tax strategies—all adapted to their generation, language, and investment sophistication."
 
 **Transition:**
-> "Let me show you how this works in practice. I'll walk you through the client experience first, then we'll discuss the advisor tools and compliance features."
+> "Let me show you how this works in practice. I'll walk you through the client experience first, then show you the advisor review tools and compliance features we've just implemented."
 
 ---
 
@@ -95,7 +97,7 @@
 > This is generated automatically every week using AI, but it's designed to go through your advisor review process before delivery."
 
 **Key Point:**
-> "The beauty is scale. Your advisors don't need to write 200 individual briefings. The system generates personalized content for each client, and advisors can review and approve in batches. We're building the advisor review workflow now—it will include risk scoring, compliance checks, and an audit trail."
+> "The beauty is scale. Your advisors don't need to write 200 individual briefings. The system generates personalized content for each client, and advisors can review and approve in batches. We've just implemented the advisor review workflow—it includes risk scoring, compliance checks, and a full review interface. Let me show you that next."
 
 ---
 
@@ -143,6 +145,39 @@
 
 ---
 
+#### E. Advisor Review Workflow ✅ **NEW**
+
+**Navigate to:** `/reviews` (switch to advisor account if needed)
+
+**Talking Points:**
+> "Now let me show you the advisor side. This is the review queue where advisors manage content before it goes to clients.
+>
+> Here you can see:
+> - All content awaiting review, organized by status
+> - Content type (briefing, explainer, lesson) and version numbers
+> - Quick actions to approve, reject, or request changes
+> - Review history and comments"
+
+**Action:** Click on a pending review to show the review interface
+
+**Talking Points (while showing review):**
+> "When an advisor opens a review, they see:
+> - Full content preview
+> - Version information
+> - Previous review comments (if any)
+> - One-click actions: Approve, Request Changes, or Reject
+> - Ability to add comments explaining their decision
+>
+> The system tracks everything—who reviewed it, when, and why. This creates a complete audit trail for compliance."
+
+**Key Point:**
+> "The review workflow is integrated with our compliance system. Content is automatically checked for restricted terms and given a risk score. High-risk content is flagged for mandatory review, while low-risk content can be auto-approved based on your policies."
+
+**If time permits, show:**
+> "You can filter by status—see what's pending, what's been approved, what needs changes. This gives advisors a clear view of their workload and helps prioritize reviews."
+
+---
+
 ### 3. Business Value & ROI (3-4 minutes)
 
 **Transition:**
@@ -186,18 +221,23 @@
 
 **Talking Points:**
 > "**Current Implementation:**
-> - All content is source-cited with confidence scores
+> - ✅ **Advisor review/approval workflow** - Full review interface with approve/reject/request-changes
+> - ✅ **Citation tracking system** - Extract and store citations from RAG search results with confidence scores
+> - ✅ **Basic compliance guardrails** - Automatic checking for 20+ restricted terms (e.g., 'guaranteed return', 'risk-free')
+> - ✅ **Risk scoring** - Content scored 0-100 based on restricted terms, high-risk topics, and content analysis
+> - ✅ **Mandatory disclosures** - Context-aware disclosure injection based on content type and topics
+> - ✅ **Content versioning** - Track all content revisions and review history
+> - ✅ **Review audit trail** - Complete history of who reviewed what, when, and why
 > - Content avoids investment recommendations (educational tone only)
 > - Multi-tenant architecture with role-based access control
 > - Azure AD integration for enterprise authentication
-> - Full audit trail of content generation and delivery
 >
-> **Planned Features (Roadmap):**
-> - Advisor review/approval workflow with redlining
-> - Compliance policy engine (restricted terms, mandatory disclosures)
-> - Risk scoring to flag content requiring human review
+> **Coming in Sprint 2 (Next 2-4 weeks):**
+> - Advanced compliance policy engine with tenant-specific configuration
+> - Multi-factor risk scoring with automated routing
+> - Compliance dashboard for policy configuration and monitoring
 > - Automated fact-checking and citation validation
-> - Compliance dashboard for monitoring and reporting"
+> - Comprehensive audit logging to Azure Blob Storage"
 
 #### Security
 
@@ -274,12 +314,9 @@
 ### Q: "How accurate is the AI-generated content?"
 
 **Answer:**
-> "Great question. We use RAG (Retrieval-Augmented Generation), which means the AI pulls from your actual research and approved content—it's not making things up. Every claim is source-cited, and we're building confidence scoring to flag low-confidence content for advisor review. Plus, the advisor review workflow ensures nothing goes out without human approval."
+> "Great question. We use RAG (Retrieval-Augmented Generation), which means the AI pulls from your actual research and approved content—it's not making things up. Every claim is source-cited with confidence scores, and we have a citation tracking system that validates citations and links them to sources. Plus, we've implemented an advisor review workflow—nothing goes out without human approval. High-risk content is automatically flagged for mandatory review."
 
-### Q: "What if the AI gives bad advice?"
-
-**Answer:**
-> "The system is designed to be educational, not advisory. Content uses educational language ('consider', 'explore') rather than recommendations ('you should', 'buy this'). We also have compliance guardrails that block prohibited claims and require mandatory disclosures. High-risk content is automatically flagged for advisor review before delivery."
+> "The system is designed to be educational, not advisory. Content uses educational language ('consider', 'explore') rather than recommendations ('you should', 'buy this'). We've implemented compliance guardrails that automatically check for 20+ restricted terms like 'guaranteed return' or 'risk-free' and block prohibited claims. The system also injects mandatory disclosures based on content type. High-risk content is automatically flagged for advisor review, and our risk scoring (0-100) helps prioritize what needs human review."
 
 ### Q: "How do you handle data privacy?"
 
@@ -302,8 +339,6 @@
 **Answer:**
 > "Pricing is customized based on your needs—number of clients, content volume, and integration requirements. Typically, firms see ROI within 6-12 months through advisor time savings alone. We can provide a detailed proposal after understanding your specific requirements."
 
-### Q: "How long does implementation take?"
-
 **Answer:**
 > "MVP deployment typically takes 4-6 weeks, including:
 > - Infrastructure setup
@@ -312,7 +347,7 @@
 > - Knowledge base setup (your research content)
 > - Initial content generation and testing
 >
-> Full feature rollout (advisor review, compliance features, multi-channel) takes 12 weeks total."
+> The core advisor review workflow is already implemented, so you can start using that immediately. Full feature rollout (advanced compliance dashboard, multi-channel delivery, analytics) takes 12 weeks total, with features rolling out incrementally."
 
 ### Q: "What if we want to customize the content style?"
 
