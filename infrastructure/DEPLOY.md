@@ -87,7 +87,53 @@ az group create \
 
 ### 4. Deploy Infrastructure
 
-#### Option A: Using Azure CLI with Bicep file
+#### Option A: Using PowerShell Script (Simplest - Recommended for Basic Deployment)
+
+The `deploy.ps1` script provides the easiest way to deploy SQL Database and Blob Storage. It handles Azure login, resource group creation, and deployment automatically.
+
+**Basic deployment (SQL and Storage only):**
+
+```powershell
+cd infrastructure
+
+.\deploy.ps1 `
+  -ResourceGroupName "rg-insightstudio" `
+  -Location "eastus2" `
+  -SqlAdminUsername "insightstudioadmin" `
+  -SqlAdminPassword (ConvertTo-SecureString "YourSecurePassword123!" -AsPlainText -Force) `
+  -SaveOutputs
+```
+
+**What the script does:**
+
+- Checks if Azure CLI is installed
+- Logs you in to Azure (if not already logged in)
+- Creates the resource group if it doesn't exist
+- Deploys SQL Database and Blob Storage
+- Displays connection strings (both Azure format and Prisma format)
+- Optionally saves outputs to `deployment-outputs.json` (with `-SaveOutputs` flag)
+
+**Parameters:**
+
+- `-ResourceGroupName` - Name of the resource group (default: `rg-insightstudio`)
+- `-Location` - Azure region (default: `eastus2`)
+- `-SqlAdminUsername` - SQL Server administrator username (required)
+- `-SqlAdminPassword` - SQL Server administrator password as SecureString (required)
+- `-SaveOutputs` - Optional flag to save deployment outputs to JSON file
+
+**Example with custom resource group and location:**
+
+```powershell
+.\deploy.ps1 `
+  -ResourceGroupName "rg-insightstudio-dev" `
+  -Location "westus2" `
+  -SqlAdminUsername "admin" `
+  -SqlAdminPassword (ConvertTo-SecureString "MySecurePass123!" -AsPlainText -Force)
+```
+
+**Note:** This script only deploys SQL Database and Blob Storage. To deploy the Function App, see the [Deploy Function App Only](#deploy-function-app-only) section below.
+
+#### Option B: Using Azure CLI with Bicep file
 
 **Basic deployment (SQL and Storage only):**
 
@@ -111,7 +157,7 @@ az deployment group create \
 
 **Note:** For production deployments, consider using Azure Key Vault references for sensitive parameters instead of passing them directly.
 
-#### Option B: Using parameters file
+#### Option C: Using parameters file
 
 1. Edit `infrastructure/azuredeploy.parameters.json` and set your SQL admin password:
 
@@ -178,20 +224,28 @@ az deployment group show \
 
 ## What Gets Deployed
 
-### Azure SQL Database
+### Basic Deployment (SQL Database and Blob Storage Only)
+
+When using `deploy.ps1` or deploying with only SQL/Storage parameters, the following resources are created:
+
+#### Azure SQL Database
 
 - **SQL Server**: A logical server that hosts the database
 - **SQL Database**: A Basic tier database (2 GB, suitable for MVP)
 - **Firewall Rules**:
   - Allow Azure Services (for Azure Functions, App Services, etc.)
-  - Allow Client IP (configure this for your development environment)
+  - Allow Client IP (placeholder - configure this for your development environment)
 
-### Azure Blob Storage
+#### Azure Blob Storage
 
 - **Storage Account**: Standard LRS storage account
 - **Blob Container**: A private container named `insightstudio-content` for storing generated content
 
-### Azure Function App
+### Full Deployment (Including Function App)
+
+When deploying with all parameters (including Azure AD, OpenAI, AI Search, etc.), the following additional resources are created:
+
+#### Azure Function App
 
 - **Function App**: Linux-based Function App running Node.js 20
 - **App Service Plan**: Consumption plan (Y1) - pay-per-execution model
@@ -206,6 +260,8 @@ az deployment group show \
   - NextAuth configuration
 
 The Function App is configured to run the weekly briefings generator on a timer trigger (every Monday at 9 AM).
+
+**Note:** The `deploy.ps1` script only deploys SQL Database and Blob Storage. To deploy the Function App, use the [Deploy Function App Only](#deploy-function-app-only) section or deploy with all parameters using Option B or C above.
 
 ## Configuration
 
