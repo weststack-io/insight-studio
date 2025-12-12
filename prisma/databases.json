@@ -1,0 +1,11 @@
+{
+  "databases": [
+    {
+      "name": "default",
+      "connectionString": "${AZURE_SQL_CONNECTION_STRING}",
+      "description": "Default database from environment variable"
+    }
+  ],
+  "defaultDatabase": "default"
+}
+
