@@ -36,13 +36,13 @@ param appServiceName string = 'app-insightstudio-${uniqueString(resourceGroup().
 param appServicePlanName string = 'plan-insightstudio-${uniqueString(resourceGroup().id)}'
 
 @description('Node.js version for Function App and App Service')
-param nodeVersion string = '~20'
+param nodeVersion string = '22-lts'
 
 @description('App Service Plan SKU tier')
-param appServicePlanSku string = 'B1'
+param appServicePlanSku string = 'P0v3'
 
 @description('App Service Plan SKU name')
-param appServicePlanSkuName string = 'B1'
+param appServicePlanSkuName string = 'P0v3'
 
 // Azure AD / Microsoft Entra ID Configuration (optional - required for App Service)
 @description('Azure AD Client ID')
@@ -339,7 +339,7 @@ resource appService 'Microsoft.Web/sites@2025-03-01' = if (shouldCreateAppServic
         }
         {
           name: 'SCM_DO_BUILD_DURING_DEPLOYMENT'
-          value: 'true'
+          value: 'false'
         }
       ]
     }
