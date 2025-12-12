@@ -556,7 +556,7 @@ export default function DashboardPage() {
                       />
                     </div>
 
-                    <div className="flex flex-col">
+                    {/* <div className="flex flex-col">
                       <label className="block text-sm font-semibold text-gray-700 mb-2">
                         Addepar Portfolio ID
                       </label>
@@ -626,7 +626,7 @@ export default function DashboardPage() {
                         Your Addepar Portfolio ID is used to fetch portfolio
                         data for portfolio briefings.
                       </p>
-                    </div>
+                    </div> */}
 
                     {/* Save Button */}
                     <div className="flex justify-end pt-4">

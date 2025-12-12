@@ -5,6 +5,7 @@ import { prisma } from "@/lib/db/client";
 import { generateBriefing } from "@/lib/ai/generators";
 // import { getAddeparClient } from "@/lib/addepar/client";
 import { BriefingType } from "@/types";
+import type { BriefingContext } from "@/lib/ai/prompts";
 
 export async function GET(request: NextRequest) {
   try {
@@ -75,7 +76,7 @@ export async function POST(request: NextRequest) {
 
     // Get portfolio data if portfolio briefing
     // COMMENTED OUT: Addepar portfolio data fetching temporarily disabled
-    let portfolioData;
+    let portfolioData: BriefingContext["portfolioData"];
     // if (type === "portfolio") {
     //   try {
     //     // Parse preferences JSON to get addeparEntityId

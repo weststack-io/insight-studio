@@ -20,7 +20,7 @@ param storageAccountName string = 'stist${uniqueString(resourceGroup().id)}'
 @description('The name of the blob container')
 param blobContainerName string = 'insightstudio-content'
 
-@description('The name of the Function App')
+@description('The name of the Function App (reserved for future use)')
 param functionAppName string = 'func-insightstudio-${uniqueString(resourceGroup().id)}'
 
 @description('The name of the storage account for Function App runtime')
@@ -29,41 +29,53 @@ param functionStorageAccountName string = 'stfunc${uniqueString(resourceGroup().
 @description('The name of the Application Insights resource')
 param appInsightsName string = 'appi-insightstudio-${uniqueString(resourceGroup().id)}'
 
-@description('Node.js version for Function App')
+@description('The name of the App Service (Next.js front-end)')
+param appServiceName string = 'app-insightstudio-${uniqueString(resourceGroup().id)}'
+
+@description('The name of the App Service Plan')
+param appServicePlanName string = 'plan-insightstudio-${uniqueString(resourceGroup().id)}'
+
+@description('Node.js version for Function App and App Service')
 param nodeVersion string = '~20'
 
-// Azure AD / Microsoft Entra ID Configuration
+@description('App Service Plan SKU tier')
+param appServicePlanSku string = 'B1'
+
+@description('App Service Plan SKU name')
+param appServicePlanSkuName string = 'B1'
+
+// Azure AD / Microsoft Entra ID Configuration (optional - required for App Service)
 @description('Azure AD Client ID')
-param azureAdClientId string
+param azureAdClientId string = ''
 
 @secure()
 @description('Azure AD Client Secret')
-param azureAdClientSecret string
+param azureAdClientSecret string = ''
 
 @description('Azure AD Tenant ID')
-param azureAdTenantId string
+param azureAdTenantId string = ''
 
-// Azure OpenAI Configuration
+// Azure OpenAI Configuration (optional - required for App Service)
 @description('Azure OpenAI Endpoint')
-param azureOpenAiEndpoint string
+param azureOpenAiEndpoint string = ''
 
 @secure()
 @description('Azure OpenAI API Key')
-param azureOpenAiApiKey string
+param azureOpenAiApiKey string = ''
 
 @description('Azure OpenAI Deployment Name')
 param azureOpenAiDeploymentName string = 'gpt-4'
 
-// Azure AI Search Configuration
+// Azure AI Search Configuration (optional - required for App Service)
 @description('Azure AI Search Endpoint')
-param azureSearchEndpoint string
+param azureSearchEndpoint string = ''
 
 @secure()
 @description('Azure AI Search API Key')
-param azureSearchApiKey string
+param azureSearchApiKey string = ''
 
 @description('Azure AI Search Index Name')
-param azureSearchIndexName string
+param azureSearchIndexName string = ''
 
 // Addepar API Configuration (optional)
 @description('Addepar API URL')
@@ -79,13 +91,19 @@ param addeparClientSecret string = ''
 @description('Addepar Firm')
 param addeparFirm string = ''
 
-// NextAuth Configuration
+// NextAuth Configuration (optional - required for App Service)
 @secure()
 @description('NextAuth Secret')
-param nextAuthSecret string
+param nextAuthSecret string = ''
 
-@description('NextAuth URL')
+@description('NextAuth URL (reserved for future use - currently auto-detected from App Service URL)')
 param nextAuthUrl string = 'http://localhost:3000'
+
+// Condition to determine if App Service should be created
+// Note: functionAppName and nextAuthUrl are reserved for future use
+var _unusedFunctionAppName = functionAppName
+var _unusedNextAuthUrl = nextAuthUrl
+var shouldCreateAppService = azureAdClientId != '' && azureAdClientSecret != '' && azureAdTenantId != '' && azureOpenAiEndpoint != '' && azureOpenAiApiKey != '' && azureSearchEndpoint != '' && azureSearchApiKey != '' && azureSearchIndexName != '' && nextAuthSecret != ''
 
 // SQL Server
 resource sqlServer 'Microsoft.Sql/servers@2023-05-01-preview' = {
@@ -198,6 +216,137 @@ resource appInsights 'Microsoft.Insights/components@2020-02-02' = {
     IngestionMode: 'ApplicationInsights'
     publicNetworkAccessForIngestion: 'Enabled'
     publicNetworkAccessForQuery: 'Enabled'
+  }
+}
+
+// Get Application Insights connection string
+var appInsightsConnectionString = 'InstrumentationKey=${appInsights.properties.InstrumentationKey};IngestionEndpoint=https://${location}.in.applicationinsights.azure.com/;LiveEndpoint=https://${location}.livediagnostics.monitor.azure.com/'
+
+// App Service Plan for Next.js front-end (only created if full deployment)
+resource appServicePlan 'Microsoft.Web/serverfarms@2024-11-01' = if (shouldCreateAppService) {
+  name: appServicePlanName
+  location: location
+  kind: 'linux'
+  sku: {
+    name: appServicePlanSkuName
+  }
+  properties: {
+    reserved: true // Required for Linux App Service Plans
+  }
+}
+
+// App Service for Next.js front-end (only created if full deployment)
+resource appService 'Microsoft.Web/sites@2025-03-01' = if (shouldCreateAppService) {
+  name: appServiceName
+  location: location
+  kind: 'app,linux'
+  properties: {
+    serverFarmId: appServicePlan.id
+    siteConfig: {
+      linuxFxVersion: 'NODE|${nodeVersion}'
+      alwaysOn: true
+      http20Enabled: true
+      minTlsVersion: '1.2'
+      ftpsState: 'Disabled'
+      appSettings: [
+        {
+          name: 'WEBSITE_NODE_DEFAULT_VERSION'
+          value: nodeVersion
+        }
+        {
+          name: 'APPINSIGHTS_INSTRUMENTATIONKEY'
+          value: appInsights.properties.InstrumentationKey
+        }
+        {
+          name: 'APPLICATIONINSIGHTS_CONNECTION_STRING'
+          value: appInsightsConnectionString
+        }
+        {
+          name: 'AZURE_SQL_CONNECTION_STRING'
+          value: 'Server=tcp:${sqlServer.properties.fullyQualifiedDomainName},1433;Initial Catalog=${sqlDatabaseName};Persist Security Info=False;User ID=${sqlAdminUsername};Password=${sqlAdminPassword};MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;'
+        }
+        {
+          name: 'AZURE_STORAGE_CONNECTION_STRING'
+          value: 'DefaultEndpointsProtocol=https;AccountName=${storageAccount.name};AccountKey=${storageAccount.listKeys().keys[0].value};EndpointSuffix=${environment().suffixes.storage}'
+        }
+        {
+          name: 'AZURE_AD_CLIENT_ID'
+          value: azureAdClientId
+        }
+        {
+          name: 'AZURE_AD_CLIENT_SECRET'
+          value: azureAdClientSecret
+        }
+        {
+          name: 'AZURE_AD_TENANT_ID'
+          value: azureAdTenantId
+        }
+        {
+          name: 'AZURE_OPENAI_ENDPOINT'
+          value: azureOpenAiEndpoint
+        }
+        {
+          name: 'AZURE_OPENAI_API_KEY'
+          value: azureOpenAiApiKey
+        }
+        {
+          name: 'AZURE_OPENAI_DEPLOYMENT_NAME'
+          value: azureOpenAiDeploymentName
+        }
+        {
+          name: 'AZURE_SEARCH_ENDPOINT'
+          value: azureSearchEndpoint
+        }
+        {
+          name: 'AZURE_SEARCH_API_KEY'
+          value: azureSearchApiKey
+        }
+        {
+          name: 'AZURE_SEARCH_INDEX_NAME'
+          value: azureSearchIndexName
+        }
+        {
+          name: 'ADDEPAR_API_URL'
+          value: addeparApiUrl
+        }
+        {
+          name: 'ADDEPAR_CLIENT_ID'
+          value: addeparClientId
+        }
+        {
+          name: 'ADDEPAR_CLIENT_SECRET'
+          value: addeparClientSecret
+        }
+        {
+          name: 'ADDEPAR_FIRM'
+          value: addeparFirm
+        }
+        {
+          name: 'NEXTAUTH_SECRET'
+          value: nextAuthSecret
+        }
+        {
+          name: 'NEXTAUTH_URL'
+          value: 'https://${appServiceName}.azurewebsites.net'
+        }
+        {
+          name: 'PORT'
+          value: '8080'
+        }
+        {
+          name: 'WEBSITES_PORT'
+          value: '8080'
+        }
+        {
+          name: 'SCM_DO_BUILD_DURING_DEPLOYMENT'
+          value: 'true'
+        }
+      ]
+    }
+    httpsOnly: true
+  }
+  identity: {
+    type: 'SystemAssigned'
   }
 }
 
@@ -350,6 +499,12 @@ output sqlConnectionStringPrisma string = 'sqlserver://${sqlServer.properties.fu
 output storageAccountName string = storageAccount.name
 output storageConnectionString string = 'DefaultEndpointsProtocol=https;AccountName=${storageAccount.name};AccountKey=${storageAccount.listKeys().keys[0].value};EndpointSuffix=${environment().suffixes.storage}'
 output blobContainerName string = blobContainer.name
+@description('App Service name (only if App Service was deployed)')
+output appServiceName string = shouldCreateAppService ? appService.name : ''
+@description('App Service URL (only if App Service was deployed)')
+output appServiceUrl string = shouldCreateAppService ? 'https://${appService.properties.defaultHostName}' : ''
+@description('App Service Plan name (only if App Service was deployed)')
+output appServicePlanName string = shouldCreateAppService ? appServicePlan.name : ''
 // output functionAppName string = functionApp.name
 // output functionAppUrl string = 'https://${functionApp.properties.defaultHostName}'
 output appInsightsName string = appInsights.name

@@ -40,7 +40,9 @@ export default function SourcesPage() {
   const [sources, setSources] = useState<ContentSource[]>([]);
   const [ingestions, setIngestions] = useState<IngestionConfig[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<"sources" | "ingestion">("sources");
+  const [activeTab, setActiveTab] = useState<"sources" | "ingestion">(
+    "sources"
+  );
   const [showRSSModal, setShowRSSModal] = useState(false);
   const [showIngestionModal, setShowIngestionModal] = useState(false);
   const [rssUrl, setRssUrl] = useState("");
@@ -156,7 +158,9 @@ export default function SourcesPage() {
   };
 
   const handleDeleteIngestion = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this ingestion configuration?")) {
+    if (
+      !confirm("Are you sure you want to delete this ingestion configuration?")
+    ) {
       return;
     }
 
@@ -220,7 +224,7 @@ export default function SourcesPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       <Header />
-      <div className="pt-16 p-8">
+      <div className="pt-25 p-8">
         <div className="max-w-7xl mx-auto">
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-gray-900 mb-2">
@@ -276,7 +280,10 @@ export default function SourcesPage() {
               <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
                 {sources.length === 0 ? (
                   <div className="p-12 text-center text-gray-500">
-                    <IconDatabase size={48} className="mx-auto mb-4 text-gray-400" />
+                    <IconDatabase
+                      size={48}
+                      className="mx-auto mb-4 text-gray-400"
+                    />
                     <p>No content sources found</p>
                     <p className="text-sm mt-2">
                       Add an RSS feed to start ingesting content
@@ -295,7 +302,10 @@ export default function SourcesPage() {
                               {source.type === "news" ? (
                                 <IconRss size={20} className="text-blue-500" />
                               ) : (
-                                <IconFileText size={20} className="text-gray-500" />
+                                <IconFileText
+                                  size={20}
+                                  className="text-gray-500"
+                                />
                               )}
                               <h3 className="font-medium text-gray-900">
                                 {source.title}
@@ -364,7 +374,10 @@ export default function SourcesPage() {
               <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
                 {ingestions.length === 0 ? (
                   <div className="p-12 text-center text-gray-500">
-                    <IconChartBar size={48} className="mx-auto mb-4 text-gray-400" />
+                    <IconChartBar
+                      size={48}
+                      className="mx-auto mb-4 text-gray-400"
+                    />
                     <p>No ingestion configurations found</p>
                     <p className="text-sm mt-2">
                       Create a configuration to automate data ingestion
@@ -569,4 +582,3 @@ export default function SourcesPage() {
     </div>
   );
 }
-
