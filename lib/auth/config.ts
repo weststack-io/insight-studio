@@ -1,5 +1,6 @@
 import { NextAuthOptions } from "next-auth";
 import AzureADProvider from "next-auth/providers/azure-ad";
+import OktaProvider from "next-auth/providers/okta";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import { prisma } from "@/lib/db/client";
 
@@ -17,6 +18,18 @@ export const authOptions: NextAuthOptions = {
       },
       allowDangerousEmailAccountLinking: true,
     }),
+    ...(process.env.OKTA_CLIENT_ID &&
+    process.env.OKTA_CLIENT_SECRET &&
+    process.env.OKTA_ISSUER
+      ? [
+          OktaProvider({
+            clientId: process.env.OKTA_CLIENT_ID,
+            clientSecret: process.env.OKTA_CLIENT_SECRET,
+            issuer: process.env.OKTA_ISSUER,
+            allowDangerousEmailAccountLinking: true,
+          }),
+        ]
+      : []),
   ],
   events: {
     async createUser({ user }) {
@@ -61,8 +74,8 @@ export const authOptions: NextAuthOptions = {
         return false;
       }
 
-      // Update azureAdId if we have account info and it's not already set
-      if (account) {
+      // Update azureAdId only for Azure AD accounts
+      if (account && account.provider === "azure-ad") {
         await prisma.user.updateMany({
           where: { email: user.email },
           data: {
