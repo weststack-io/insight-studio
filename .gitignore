@@ -115,3 +115,5 @@ temp/
 *.tmp
 *.temp
 
+prisma/databases.json
+prisma/databases.json
