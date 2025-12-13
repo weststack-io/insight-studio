@@ -1,6 +1,9 @@
 import { PrismaClient } from '@prisma/client';
+import { createMssqlAdapter } from '../lib/db/adapter';
 
-const prisma = new PrismaClient();
+const prisma = new PrismaClient({
+  adapter: createMssqlAdapter(),
+});
 
 async function listTenants() {
   try {

@@ -1,7 +1,10 @@
 import { PrismaClient } from "@prisma/client";
 import Parser from "rss-parser";
+import { createMssqlAdapter } from "@/lib/db/adapter";
 
-const prisma = new PrismaClient();
+const prisma = new PrismaClient({
+  adapter: createMssqlAdapter(),
+});
 const parser = new Parser();
 
 export interface RSSFeedConfig {

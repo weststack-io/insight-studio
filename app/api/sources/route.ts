@@ -8,8 +8,11 @@ import {
   calculateReliabilityScore,
 } from "@/lib/ingestion/content-sources";
 import { PrismaClient } from "@prisma/client";
+import { createMssqlAdapter } from "@/lib/db/adapter";
 
-const prisma = new PrismaClient();
+const prisma = new PrismaClient({
+  adapter: createMssqlAdapter(),
+});
 
 // GET - List content sources
 export async function GET(request: NextRequest) {

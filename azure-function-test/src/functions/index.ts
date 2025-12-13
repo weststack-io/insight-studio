@@ -1,9 +1,12 @@
 import { app, InvocationContext, Timer } from "@azure/functions";
 import { PrismaClient } from "@prisma/client";
 import { generateBriefing } from "../../../lib/ai/generators";
+import { createMssqlAdapter } from "../../../lib/db/adapter";
 // import { getAddeparClient } from "../../../lib/addepar/client";
 
-const prisma = new PrismaClient();
+const prisma = new PrismaClient({
+  adapter: createMssqlAdapter(),
+});
 
 /**
  * Azure Function to generate weekly briefings for all active users

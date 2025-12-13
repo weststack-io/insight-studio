@@ -1,8 +1,11 @@
 import { getSearchClient } from "../azure/search";
 import { PrismaClient } from "@prisma/client";
 import { getOpenAIClient } from "../azure/openai";
+import { createMssqlAdapter } from "@/lib/db/adapter";
 
-const prisma = new PrismaClient();
+const prisma = new PrismaClient({
+  adapter: createMssqlAdapter(),
+});
 
 export interface IndexableContent {
   id: string;

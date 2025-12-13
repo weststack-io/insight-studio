@@ -7,7 +7,10 @@ This project has been upgraded from Prisma 6.19.0 to Prisma 7.1.0 with the new c
 ### 1. Package Updates
 
 - **@prisma/client**: Updated from `^6.19.0` to `^7.1.0`
+- **@prisma/adapter-mssql**: Added `^7.1.0` (required for Prisma 7 SQL Server adapter)
 - **prisma**: Updated from `^6.19.0` to `^7.1.0`
+- **mssql**: Added `^11.0.1` (node-mssql driver for SQL Server)
+- **@types/mssql**: Added `^9.1.4` (TypeScript types for mssql)
 - **dotenv**: Added as a dependency (required for `prisma/config.ts`)
 
 ### 2. Schema Changes
@@ -45,10 +48,31 @@ export default defineConfig({
 })
 ```
 
-### 4. Deployment Updates
+### 4. PrismaClient Instantiation Changes
+
+**Before (Prisma 6):**
+```typescript
+import { PrismaClient } from '@prisma/client';
+
+const prisma = new PrismaClient();
+```
+
+**After (Prisma 7):**
+```typescript
+import { PrismaClient } from '@prisma/client';
+import { createMssqlAdapter } from '@/lib/db/adapter';
+
+const prisma = new PrismaClient({
+  adapter: createMssqlAdapter(),
+});
+```
+
+All PrismaClient instantiations have been updated to use the `@prisma/adapter-mssql` adapter. A helper function `createMssqlAdapter()` has been created in `lib/db/adapter.ts` to simplify adapter creation.
+
+### 5. Deployment Updates
 
 - Updated `webdeploy.ps1` to copy `prisma/config.ts` during deployment
-- Updated `webdeploy/package.json` to use Prisma 7
+- Updated `webdeploy/package.json` to use Prisma 7 and include adapter dependencies
 - Updated startup command documentation
 
 ## Migration Steps
@@ -103,7 +127,8 @@ The deployment script will now include `prisma/config.ts` in the deployment pack
 
 1. **Configuration Location**: Connection URLs are now in `prisma/config.ts` instead of `schema.prisma`
 2. **Environment Variables**: Must use `dotenv` to load environment variables when using Prisma CLI commands
-3. **Backward Compatibility**: PrismaClient usage remains the same - no changes needed in application code
+3. **Driver Adapters**: Prisma 7 requires driver adapters for relational databases. For SQL Server, we use `@prisma/adapter-mssql` with the `mssql` (node-mssql) driver
+4. **PrismaClient Constructor**: Must pass an `adapter` to the PrismaClient constructor (or use `accelerateUrl` for Prisma Accelerate)
 
 ## Troubleshooting
 

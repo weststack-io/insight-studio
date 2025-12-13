@@ -3,8 +3,11 @@ import { PrismaClient } from "@prisma/client";
 import { ingestMarketData } from "../../lib/ingestion/market-data";
 import { ingestRSSFeed } from "../../lib/ingestion/content-sources";
 import { indexMarketData, indexContentSources } from "../../lib/ingestion/indexing";
+import { createMssqlAdapter } from "../../lib/db/adapter";
 
-const prisma = new PrismaClient();
+const prisma = new PrismaClient({
+  adapter: createMssqlAdapter(),
+});
 
 /**
  * Azure Function to run scheduled data ingestion
