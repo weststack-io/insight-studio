@@ -18,6 +18,7 @@ export interface BriefingContext {
     totalValue: number;
   };
   marketContext?: string;
+  houseView?: string;
   userPreferences?: string[];
   generation?: Generation;
   language: Language;
@@ -46,6 +47,7 @@ export function getBriefingPrompt(
     type,
     portfolioData,
     marketContext,
+    houseView,
     userPreferences,
     generation,
     language,
@@ -109,6 +111,10 @@ Format the response as JSON with the following structure:
 
   if (marketContext) {
     userPrompt += `\n\nMarket Context:\n${marketContext}`;
+  }
+
+  if (houseView) {
+    userPrompt += `\n\n${houseView}`;
   }
 
   if (userPreferences && userPreferences.length > 0) {

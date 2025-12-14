@@ -1,4 +1,4 @@
-import { SearchClient, AzureKeyCredential } from '@azure/search-documents';
+import { SearchClient, AzureKeyCredential } from "@azure/search-documents";
 
 let searchClient: SearchClient<Record<string, any>> | null = null;
 
@@ -9,7 +9,7 @@ export function getSearchClient(): SearchClient<Record<string, any>> {
     const indexName = process.env.AZURE_SEARCH_INDEX_NAME;
 
     if (!endpoint || !apiKey || !indexName) {
-      throw new Error('Azure AI Search credentials are not configured');
+      throw new Error("Azure AI Search credentials are not configured");
     }
 
     searchClient = new SearchClient<Record<string, any>>(
@@ -33,13 +33,21 @@ export async function searchVector(
   options?: {
     top?: number;
     filter?: string;
+    tenantId?: string;
   }
 ): Promise<SearchResult[]> {
   const client = getSearchClient();
 
+  // Add tenant filter if provided
+  let filter = options?.filter || "";
+  if (options?.tenantId) {
+    const tenantFilter = `tenantId eq '${options.tenantId}'`;
+    filter = filter ? `${filter} and ${tenantFilter}` : tenantFilter;
+  }
+
   const searchResults = await client.search(query, {
     top: options?.top ?? 5,
-    filter: options?.filter,
+    filter: filter || undefined,
     includeTotalCount: true,
   });
 
@@ -75,11 +83,13 @@ export async function hybridSearch(
   };
 
   if (vectorQuery) {
-    searchOptions.vectorQueries = [{
-      kind: 'vector',
-      vector: vectorQuery.vector,
-      kNearestNeighborsCount: vectorQuery.kNearestNeighborsCount ?? 5,
-    }];
+    searchOptions.vectorQueries = [
+      {
+        kind: "vector",
+        vector: vectorQuery.vector,
+        kNearestNeighborsCount: vectorQuery.kNearestNeighborsCount ?? 5,
+      },
+    ];
   }
 
   const searchResults = await client.search(query, searchOptions);
@@ -95,4 +105,3 @@ export async function hybridSearch(
 
   return results;
 }
-

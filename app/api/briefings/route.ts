@@ -14,6 +14,11 @@ import {
 import { calculateMultiFactorRiskScore } from "@/lib/compliance/risk-scoring";
 import { logContentGeneration } from "@/lib/compliance/audit";
 import type { BriefingContext } from "@/lib/ai/prompts";
+import {
+  getActiveHouseView,
+  formatHouseViewForPrompt,
+} from "@/lib/ingestion/house-views";
+import { getMarketData } from "@/lib/ingestion/market-data";
 
 export async function GET(request: NextRequest) {
   try {
@@ -120,6 +125,59 @@ export async function POST(request: NextRequest) {
     //   }
     // }
 
+    // Get house view for tenant
+    let houseViewText = "";
+    try {
+      const houseView = await getActiveHouseView(tenantId);
+      if (houseView) {
+        houseViewText = formatHouseViewForPrompt(houseView);
+        console.log(`[Briefings] Found house view: ${houseView.title}`);
+      }
+    } catch (error) {
+      console.error("[Briefings] Failed to fetch house view:", error);
+    }
+
+    // Get recent market data for context
+    let marketDataContext = "";
+    try {
+      const oneWeekAgo = new Date();
+      oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+
+      const recentMarketData = await getMarketData({
+        tenantId,
+        startDate: oneWeekAgo,
+        limit: 20,
+      });
+
+      if (recentMarketData.length > 0) {
+        // Format market data for prompt
+        const marketSummary = recentMarketData
+          .map((item) => {
+            const data = item.data;
+            if (data.symbol && data.price) {
+              const changePct = data.changePercent
+                ? `${
+                    data.changePercent > 0 ? "+" : ""
+                  }${data.changePercent.toFixed(2)}%`
+                : "N/A";
+              return `${data.symbol}: $${data.price} (${changePct})`;
+            }
+            return null;
+          })
+          .filter(Boolean)
+          .join("\n");
+
+        if (marketSummary) {
+          marketDataContext = `\n\nRecent Market Data:\n${marketSummary}`;
+          console.log(
+            `[Briefings] Found ${recentMarketData.length} market data points`
+          );
+        }
+      }
+    } catch (error) {
+      console.error("[Briefings] Failed to fetch market data:", error);
+    }
+
     // Generate briefing
     console.log(
       `[Briefings] Generating ${type} briefing with portfolio data:`,
@@ -127,11 +185,15 @@ export async function POST(request: NextRequest) {
         hasPortfolioData: !!portfolioData,
         portfolioValue: portfolioData?.totalValue,
         holdingsCount: portfolioData?.holdings?.length,
+        hasHouseView: !!houseViewText,
+        hasMarketData: !!marketDataContext,
       }
     );
     const briefingContent = await generateBriefing({
       type,
       portfolioData,
+      houseView: houseViewText || undefined,
+      marketContext: marketDataContext || undefined,
       language: dbUser.language as any,
       generation: dbUser.generation as any,
       sophisticationLevel: dbUser.sophisticationLevel as any,
@@ -177,6 +239,7 @@ export async function POST(request: NextRequest) {
       searchResults = await searchVector(searchQuery, {
         top: 5,
         filter: dateFilter,
+        tenantId: tenantId,
       });
     } catch (error) {
       console.error("[Briefings] Failed to search for citations:", error);

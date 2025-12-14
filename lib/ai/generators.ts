@@ -49,22 +49,38 @@ export async function generateBriefing(
 ): Promise<GeneratedBriefing> {
   // Log portfolio data usage
   if (context.portfolioData) {
-    console.log(`[Generators] Using portfolio data for ${context.type} briefing:`, {
-      totalValue: context.portfolioData.totalValue,
-      holdingsCount: context.portfolioData.holdings.length,
-      topHoldings: context.portfolioData.holdings
-        .sort((a, b) => b.value - a.value)
-        .slice(0, 3)
-        .map(h => `${h.symbol || h.name}: $${h.value.toLocaleString()} (${h.percentage.toFixed(1)}%)`),
-      assetClasses: [...new Set(context.portfolioData.holdings.map(h => h.assetClass).filter(Boolean))],
-    });
+    console.log(
+      `[Generators] Using portfolio data for ${context.type} briefing:`,
+      {
+        totalValue: context.portfolioData.totalValue,
+        holdingsCount: context.portfolioData.holdings.length,
+        topHoldings: context.portfolioData.holdings
+          .sort((a, b) => b.value - a.value)
+          .slice(0, 3)
+          .map(
+            (h) =>
+              `${
+                h.symbol || h.name
+              }: $${h.value.toLocaleString()} (${h.percentage.toFixed(1)}%)`
+          ),
+        assetClasses: [
+          ...new Set(
+            context.portfolioData.holdings
+              .map((h) => h.assetClass)
+              .filter(Boolean)
+          ),
+        ],
+      }
+    );
   } else if (context.type === "portfolio") {
-    console.log(`[Generators] Warning: Portfolio briefing requested but no portfolio data provided`);
+    console.log(
+      `[Generators] Warning: Portfolio briefing requested but no portfolio data provided`
+    );
   }
 
-  // Search for relevant market context if needed
-  let marketContext = "";
-  if (context.type === "market" || !context.marketContext) {
+  // Use provided market context, or search for relevant market context if needed
+  let marketContext = context.marketContext || "";
+  if (!marketContext && (context.type === "market" || !context.marketContext)) {
     try {
       const searchQuery =
         context.type === "market"
@@ -91,8 +107,6 @@ export async function generateBriefing(
     } catch (error) {
       console.error("Failed to search for market context:", error);
     }
-  } else {
-    marketContext = context.marketContext;
   }
 
   const prompt = getBriefingPrompt({
