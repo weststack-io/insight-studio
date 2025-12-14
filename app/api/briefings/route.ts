@@ -5,6 +5,14 @@ import { prisma } from "@/lib/db/client";
 import { generateBriefing } from "@/lib/ai/generators";
 // import { getAddeparClient } from "@/lib/addepar/client";
 import { BriefingType } from "@/types";
+import { searchVector, SearchResult } from "@/lib/azure/search";
+import {
+  extractCitations,
+  storeCitations,
+  updateContentCitations,
+} from "@/lib/compliance/citations";
+import { calculateMultiFactorRiskScore } from "@/lib/compliance/risk-scoring";
+import { logContentGeneration } from "@/lib/compliance/audit";
 import type { BriefingContext } from "@/lib/ai/prompts";
 
 export async function GET(request: NextRequest) {
@@ -144,7 +152,37 @@ export async function POST(request: NextRequest) {
     const weekStartDate = new Date(now.setDate(diff));
     weekStartDate.setHours(0, 0, 0, 0);
 
-    // Save briefing
+    // Convert briefing content to string for risk scoring
+    const contentText = [
+      briefingContent.title,
+      briefingContent.summary,
+      ...briefingContent.sections.map((s) => `${s.heading}\n${s.content}`),
+      ...briefingContent.keyTakeaways,
+    ].join("\n\n");
+
+    // Search for citations (using same query as generation)
+    let searchResults: SearchResult[] = [];
+    try {
+      const searchQuery =
+        type === "market"
+          ? "weekly market trends economic conditions"
+          : "portfolio performance investment strategies";
+
+      const twoWeeksAgo = new Date(now);
+      twoWeeksAgo.setDate(twoWeeksAgo.getDate() - 14);
+      const startDate = twoWeeksAgo.toISOString();
+      const endDate = now.toISOString();
+      const dateFilter = `MeetingDate gt '${startDate}' and MeetingDate lt '${endDate}'`;
+
+      searchResults = await searchVector(searchQuery, {
+        top: 5,
+        filter: dateFilter,
+      });
+    } catch (error) {
+      console.error("[Briefings] Failed to search for citations:", error);
+    }
+
+    // Save briefing first (we need the ID for citations)
     const briefing = await prisma.briefing.create({
       data: {
         userId,
@@ -155,7 +193,104 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    return NextResponse.json({ briefing });
+    // Extract and store citations (now that we have contentId)
+    let citations: Citation[] = [];
+    try {
+      const extractedCitations = await extractCitations(
+        contentText,
+        searchResults,
+        briefing.id,
+        "briefing",
+        tenantId
+      );
+
+      // Store citations
+      if (extractedCitations.length > 0) {
+        citations = await storeCitations(extractedCitations);
+        await updateContentCitations(briefing.id, "briefing", citations);
+      }
+    } catch (error) {
+      console.error("[Briefings] Failed to extract citations:", error);
+    }
+
+    // Calculate risk score
+    let riskScore = 0;
+    let requiresReview = false;
+    try {
+      const riskResult = await calculateMultiFactorRiskScore(
+        contentText,
+        "briefing",
+        citations,
+        userId,
+        tenantId,
+        {
+          topics: briefingContent.sections.map((s) => s.heading),
+          wordCount: contentText.split(/\s+/).length,
+        }
+      );
+
+      riskScore = riskResult.totalScore;
+      requiresReview = riskResult.requiresReview;
+
+      console.log(`[Briefings] Risk score calculated:`, {
+        riskScore,
+        requiresReview,
+        factors: riskResult.factors,
+      });
+    } catch (error) {
+      console.error("[Briefings] Failed to calculate risk score:", error);
+    }
+
+    // Update briefing with risk score, requiresReview, and citations
+    const updatedBriefing = await prisma.briefing.update({
+      where: { id: briefing.id },
+      data: {
+        riskScore,
+        requiresReview,
+        citations: citations.length > 0 ? JSON.stringify(citations) : null,
+      },
+    });
+
+    // Create ContentReview if review is required
+    if (requiresReview) {
+      try {
+        await prisma.contentReview.create({
+          data: {
+            contentId: updatedBriefing.id,
+            contentType: "briefing",
+            status: "pending_review",
+            version: updatedBriefing.version,
+          },
+        });
+        console.log(
+          `[Briefings] Created review for briefing ${updatedBriefing.id}`
+        );
+      } catch (error) {
+        console.error("[Briefings] Failed to create review:", error);
+      }
+    }
+
+    // Log content generation for audit
+    try {
+      await logContentGeneration(
+        tenantId,
+        userId,
+        "briefing",
+        updatedBriefing.id,
+        `Generate ${type} briefing`,
+        contentText,
+        {
+          type,
+          riskScore,
+          requiresReview,
+          citations: citations,
+        }
+      );
+    } catch (error) {
+      console.error("[Briefings] Failed to log content generation:", error);
+    }
+
+    return NextResponse.json({ briefing: updatedBriefing });
   } catch (error) {
     console.error("Failed to generate briefing:", error);
     return NextResponse.json(
