@@ -11,15 +11,16 @@ datasource db {
 }
 
 model Tenant {
-  id            String   @id @default(uuid())
-  name          String
-  logoUrl       String?  @map("logo_url")
-  primaryColor  String   @map("primary_color") @default("#000000")
-  secondaryColor String  @map("secondary_color") @default("#666666")
-  fontFamily    String?  @map("font_family")
-  domain        String?  @unique
-  createdAt     DateTime @default(now()) @map("created_at")
-  updatedAt     DateTime @updatedAt @map("updated_at")
+  id              String   @id @default(uuid())
+  name            String
+  applicationName String?  @map("application_name")
+  logoUrl         String?  @map("logo_url")
+  primaryColor    String   @map("primary_color") @default("#000000")
+  secondaryColor  String  @map("secondary_color") @default("#666666")
+  fontFamily      String?  @map("font_family")
+  domain          String?  @unique
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
 
   users      User[]
   briefings  Briefing[]

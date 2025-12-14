@@ -5,6 +5,11 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { IconMenu2, IconX, IconLogout } from "@tabler/icons-react";
+import {
+  getApplicationName,
+  getApplicationNameInitial,
+} from "@/lib/branding/application-name";
+import { Tenant } from "@/types";
 
 const NAV_ITEMS = [
   { href: "/dashboard", label: "Dashboard" },
@@ -16,23 +21,19 @@ const NAV_ITEMS = [
   { href: "/sources", label: "Sources" },
 ];
 
-interface Tenant {
-  name?: string;
-}
-
 interface User {
   name?: string;
   email?: string;
 }
 
 interface HeaderProps {
-  tenant?: Tenant;
+  tenant?: Partial<Tenant> | null;
   user?: User;
   signOut?: () => void;
 }
 
 export default function Header({
-  tenant = {},
+  tenant,
   user = {},
   signOut = () => {},
 }: HeaderProps) {
@@ -63,10 +64,10 @@ export default function Header({
                            text-white flex items-center justify-center font-bold shadow-md"
                 aria-hidden
               >
-                {tenant?.name?.[0] ?? "I"}
+                {getApplicationNameInitial(tenant)}
               </div>
               <span className="hidden sm:inline-block text-lg sm:text-xl font-semibold text-gray-900">
-                {tenant?.name ?? "Insight Studio"}
+                {getApplicationName(tenant)}
               </span>
             </Link>
 
@@ -152,11 +153,11 @@ export default function Header({
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-3">
               <div className="w-9 h-9 rounded-full bg-accent flex items-center justify-center text-white font-semibold">
-                {tenant?.name?.[0] ?? "I"}
+                {getApplicationNameInitial(tenant)}
               </div>
               <div>
                 <div className="text-sm font-medium text-gray-900">
-                  {tenant?.name ?? "Insight Studio"}
+                  {getApplicationName(tenant)}
                 </div>
                 <div className="text-xs text-gray-500">{user?.email}</div>
               </div>

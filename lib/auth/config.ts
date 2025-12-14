@@ -36,6 +36,7 @@ export const authOptions: NextAuthOptions = {
             (await prisma.tenant.create({
               data: {
                 name: "Default Tenant",
+                applicationName: "Insight Studio",
                 domain: emailDomain,
               },
             }));
