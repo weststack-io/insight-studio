@@ -18,6 +18,7 @@
     "db:deploy:single": "npx tsx scripts/deploy-schema.ts single",
     "db:deploy:dry-run": "npx tsx scripts/deploy-schema.ts all --dry-run",
     "db:rollback": "npx tsx scripts/deploy-schema.ts rollback",
+    "db:resolve": "npx tsx scripts/deploy-schema.ts resolve",
     "theme:add-weststack": "npx tsx scripts/add-weststack-theme.ts"
   },
   "engines": {

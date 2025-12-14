@@ -267,6 +267,65 @@ class SchemaDeployer {
     this.printSummary();
   }
 
+  async resolveMigration(
+    databaseName: string,
+    migrationName: string,
+    resolution: "applied" | "rolled-back" | "skipped"
+  ): Promise<void> {
+    console.log(
+      `🔧 Resolving migration "${migrationName}" for database: ${databaseName}\n`
+    );
+
+    if (!existsSync(this.configPath)) {
+      throw new Error(`Configuration file not found: ${this.configPath}`);
+    }
+
+    const config: DatabasesConfig = JSON.parse(
+      readFileSync(this.configPath, "utf-8")
+    );
+    const dbConfig = config.databases.find((db) => db.name === databaseName);
+
+    if (!dbConfig) {
+      throw new Error(`Database "${databaseName}" not found in configuration`);
+    }
+
+    const connectionString = this.resolveConnectionString(
+      dbConfig.connectionString
+    );
+    const env = {
+      ...process.env,
+      AZURE_SQL_CONNECTION_STRING: connectionString,
+    };
+
+    try {
+      console.log(
+        `   Resolving migration "${migrationName}" as: ${resolution}\n`
+      );
+
+      // Use Prisma migrate resolve to mark the migration
+      const output = execSync(
+        `npx prisma migrate resolve --${resolution} "${migrationName}" --schema=./prisma/schema.prisma`,
+        {
+          encoding: "utf-8",
+          env,
+          stdio: "pipe",
+          cwd: process.cwd(),
+        }
+      );
+
+      console.log("✅ Migration resolved successfully");
+      console.log(output);
+
+      console.log(
+        `\n💡 You can now run: npm run db:deploy single ${databaseName}`
+      );
+    } catch (error: any) {
+      const errorMessage = error.message || String(error);
+      console.error(`❌ Failed to resolve migration:`, errorMessage);
+      throw error;
+    }
+  }
+
   async rollback(
     databaseName: string,
     targetMigration?: string
@@ -413,12 +472,45 @@ async function main() {
         await deployer.rollback(rollbackDbName, targetMigration);
         break;
 
+      case "resolve":
+        const resolveDbName = args[1];
+        const migrationName = args[2];
+        const resolution = args[3] as "applied" | "rolled-back" | "skipped";
+        if (!resolveDbName || !migrationName || !resolution) {
+          console.error(
+            "❌ Error: Database name, migration name, and resolution required"
+          );
+          console.error(
+            "Usage: npm run db:resolve <database-name> <migration-name> <applied|rolled-back|skipped>"
+          );
+          console.error("\nExample:");
+          console.error(
+            "  npm run db:resolve weststack add_application_name applied"
+          );
+          process.exit(1);
+        }
+        if (!["applied", "rolled-back", "skipped"].includes(resolution)) {
+          console.error(
+            "❌ Error: Resolution must be one of: applied, rolled-back, skipped"
+          );
+          process.exit(1);
+        }
+        await deployer.resolveMigration(
+          resolveDbName,
+          migrationName,
+          resolution
+        );
+        break;
+
       default:
         console.error(`❌ Unknown command: ${command}`);
         console.error("\nAvailable commands:");
         console.error("  all          - Deploy to all databases (default)");
         console.error("  single <db>  - Deploy to a single database");
         console.error("  rollback <db> [migration] - Rollback a database");
+        console.error(
+          "  resolve <db> <migration> <applied|rolled-back|skipped> - Resolve a failed migration"
+        );
         console.error("\nOptions:");
         console.error("  --dry-run, -d - Dry run mode (no changes)");
         process.exit(1);
