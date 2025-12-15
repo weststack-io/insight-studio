@@ -1,3 +1,13 @@
+// Load environment variables (optional - dotenv may not be installed)
+try {
+  const dotenv = require("dotenv");
+  // Load .env first, then .env.local (so .env.local can override)
+  dotenv.config();
+  dotenv.config({ path: ".env.local" });
+} catch (error) {
+  // dotenv not available, environment variables should be set externally
+}
+
 import { prisma } from "../lib/db/client";
 
 async function setUserRole() {

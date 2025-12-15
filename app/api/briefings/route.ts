@@ -10,6 +10,7 @@ import {
   extractCitations,
   storeCitations,
   updateContentCitations,
+  type Citation,
 } from "@/lib/compliance/citations";
 import { calculateMultiFactorRiskScore } from "@/lib/compliance/risk-scoring";
 import { logContentGeneration } from "@/lib/compliance/audit";
