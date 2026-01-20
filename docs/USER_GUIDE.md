@@ -9,6 +9,7 @@ Insight Studio is a **Personalized Briefings & Education Hub** designed for weal
 ### Primary Users: Wealth Advisors
 
 Wealth advisors use Insight Studio to:
+
 - Generate personalized briefings and educational content for their clients
 - Review and approve content before delivery to ensure compliance and quality
 - Monitor client engagement and content performance
@@ -17,6 +18,7 @@ Wealth advisors use Insight Studio to:
 ### End Beneficiaries: High Net Worth (HNW) Clients
 
 HNW clients receive:
+
 - Weekly personalized briefings explaining market moves and portfolio impacts
 - Micro-lessons on complex wealth management topics
 - Content tailored to their preferences (age, language, sophistication level)
@@ -31,6 +33,7 @@ The application supports three distinct user roles:
 **Purpose**: Wealth advisors who create, review, and approve content for clients.
 
 **Capabilities**:
+
 - ✅ Review and approve generated briefings, lessons, and explainers
 - ✅ Request changes or reject content with comments
 - ✅ View content with citations and source references
@@ -40,6 +43,10 @@ The application supports three distinct user roles:
 - ✅ Access compliance dashboard with policy configuration UI
 - ✅ View risk score visualizations and violation reports
 - ✅ Monitor multi-factor risk scoring (content sensitivity, citations, user profile, historical patterns)
+- ✅ Manage data sources (RSS feeds, market data) via Sources page
+- ✅ Configure ingestion schedules for automated data collection
+- ✅ Create and manage house views (tenant-specific investment philosophy)
+- ✅ Monitor ingestion status and source reliability metrics
 - 🚧 Monitor content analytics and client engagement (Sprint 4)
 
 **Current Status**: ✅ Core advisor review workflow and comprehensive compliance engine implemented. See [Technical Implementation Plan](../.cursor/plans/technical-implementation-plan.md) for roadmap.
@@ -49,6 +56,7 @@ The application supports three distinct user roles:
 **Purpose**: Primary client users who receive personalized content.
 
 **Capabilities**:
+
 - View personalized dashboard with briefings, lessons, and explainers
 - Access weekly market briefings tailored to their portfolio
 - Browse educational micro-lessons on wealth topics
@@ -71,6 +79,7 @@ The application supports three distinct user roles:
 ### For HNW Clients (Family Members & Trustees)
 
 #### 1. **Personalized Dashboard**
+
 - **Location**: `/dashboard`
 - **Features**:
   - Personalized feed showing recent briefings and recommended lessons
@@ -79,15 +88,18 @@ The application supports three distinct user roles:
   - Tabs for Feed, Preferences, and Profile
 
 #### 2. **Weekly Briefings**
+
 - **Location**: `/briefings`
 - **Content**: Weekly market updates explaining:
-  - What happened in the markets
+  - What happened in the markets (now includes real-time market data from Alpha Maven)
   - Why it matters to their portfolio
   - Portfolio impact (tax-aware)
   - Suggested actions (educational tone)
-  - Source citations
+  - Source citations (now includes citations from ingested RSS feeds and content sources)
+  - House view context (tenant-specific investment philosophy automatically included)
 
 #### 3. **Educational Lessons**
+
 - **Location**: `/lessons`
 - **Content**: Micro-lessons on complex topics like:
   - Qualified Small Business Stock (QSBS)
@@ -98,12 +110,14 @@ The application supports three distinct user roles:
 - **Display**: Content is rendered with enhanced markdown formatting for improved readability, including proper typography, headings, lists, links, and code blocks
 
 #### 4. **Topic Explainers**
+
 - **Location**: `/explainers`
 - **Content**: On-demand explanations of specific financial topics
 - **Features**: Search and browse by topic
 - **Display**: Content is rendered with enhanced markdown formatting for improved readability, including proper typography, headings, lists, links, and code blocks
 
 #### 5. **Preferences Management**
+
 - **Location**: `/dashboard` → Preferences tab
 - **Features**:
   - Add topics of interest
@@ -112,6 +126,7 @@ The application supports three distinct user roles:
   - See how preferences affect your personalized content
 
 #### 6. **Profile Settings**
+
 - **Location**: `/dashboard` → Profile tab
 - **Features**:
   - View and update language preference
@@ -122,6 +137,7 @@ The application supports three distinct user roles:
 ### For Wealth Advisors
 
 #### 1. **Review Queue** ✅ **IMPLEMENTED**
+
 - **Location**: `/reviews`
 - **Features**:
   - ✅ View pending content awaiting review
@@ -131,6 +147,7 @@ The application supports three distinct user roles:
   - ✅ See reviewer information and review timestamps
 
 #### 2. **Content Review Interface** ✅ **IMPLEMENTED**
+
 - **Features**:
   - ✅ View full content preview in review modal
   - ✅ Approve, reject, or request changes with one click
@@ -143,6 +160,7 @@ The application supports three distinct user roles:
   - 🚧 Side-by-side comparison of content versions (coming in future sprint)
 
 #### 3. **Compliance Dashboard** ✅ **IMPLEMENTED**
+
 - **Location**: `/compliance`
 - **Features**:
   - ✅ Configure policy rules and restricted terms (prohibited terms, required disclosures, content restrictions, risk thresholds)
@@ -153,7 +171,30 @@ The application supports three distinct user roles:
   - ✅ Risk score visualization (placeholder for future analytics)
   - 🚧 Advanced audit log search interface (basic logging implemented, search UI coming)
 
-#### 4. **Content Analytics** 🚧 **PLANNED (Sprint 4)**
+#### 4. **Sources Management** ✅ **IMPLEMENTED (Sprint 3)**
+
+- **Location**: `/sources`
+- **Features**:
+  - ✅ Configure RSS feed sources for content ingestion
+  - ✅ Create and manage ingestion configurations (market data, RSS feeds)
+  - ✅ Monitor ingestion status (last run, next run, status)
+  - ✅ View source reliability metrics
+  - ✅ Delete ingestion configurations
+  - ✅ Automatic ingestion via scheduled Azure Function (every 6 hours)
+  - ✅ Content sources automatically indexed for RAG search
+
+#### 5. **House Views Management** ✅ **IMPLEMENTED (Sprint 3)**
+
+- **Purpose**: Define tenant-specific investment philosophy and house views
+- **Features**:
+  - ✅ Create and manage house views (tenant-specific investment philosophy)
+  - ✅ Automatic versioning when house views are updated
+  - ✅ House views automatically included in briefing generation prompts
+  - ✅ Active house view influences all generated briefings for the tenant
+  - ✅ Version history tracking for house views
+
+#### 6. **Content Analytics** 🚧 **PLANNED (Sprint 4)**
+
 - **Features**:
   - View engagement metrics (open rates, time spent, topic clicks)
   - Monitor client preferences and behavior
@@ -164,16 +205,19 @@ The application supports three distinct user roles:
 The application personalizes content based on multiple signals:
 
 ### Profile-Based Personalization
+
 - **Age/Generation**: Content adapted for Gen X, Millennials, Gen Z, or Boomers
 - **Language**: Content delivered in user's preferred language (English, Spanish, French, etc.)
 - **Investment Sophistication**: Content complexity adjusted for beginner, intermediate, or advanced levels
 
 ### Portfolio-Based Personalization
+
 - **Holdings**: Content considers user's actual portfolio holdings
 - **Tax Context**: Avoids irrelevant advice (e.g., wash sale windows, lockups)
 - **Concentration**: Highlights relevant portfolio concentrations
 
 ### Behavior-Based Personalization
+
 - **Engagement**: Topics user has opened or spent time on
 - **Preferences**: Explicit topic interests set by user
 - **Format Preferences**: Preferred content formats (text vs audio)
@@ -194,21 +238,25 @@ Topic preferences are a powerful way to customize your content experience. Here'
 #### How Preferences Affect Your Content
 
 **1. Personalized Feed - Explainers Filtering**
+
 - Only topics marked with **High** interest level are used to filter explainers in your personalized dashboard feed
 - The feed will show up to 5 explainers that match your high-interest topics
 - This ensures you see the most relevant educational content first
 
 **2. Briefing Generation - AI Content Tailoring**
+
 - When weekly briefings are generated, **all** your topic preferences (regardless of interest level) are passed to the AI
 - The AI uses this information to tailor the briefing content to topics you care about
 - For example, if you've indicated interest in "Tax Strategies", the briefing may include more tax-related insights
 
 **3. Content Ranking and Scoring**
+
 - Explainers and lessons that match your topic preferences receive higher scores in the ranking algorithm
 - Content matching your preferences gets a +10 point boost in relevance scoring
 - This means preferred topics appear higher in search results and recommendations
 
 **4. Recommended Topics**
+
 - The system may suggest additional topics based on your existing preferences and portfolio holdings
 - These recommendations help you discover new areas of interest
 
@@ -244,6 +292,8 @@ The application follows a weekly content generation cycle:
 
 ### ✅ Implemented Features
 
+**Core Platform:**
+
 - Multi-tenant architecture with theme configuration
 - User authentication via Azure AD
 - Client-facing dashboard and content views
@@ -253,19 +303,36 @@ The application follows a weekly content generation cycle:
 - Portfolio data integration with Addepar
 - Weekly briefings Azure Function (scheduled)
 - Database schema with user roles
+
+**Sprint 1 - Advisor Review & Citations:**
+
 - ✅ **Advisor review/approval workflow** - Review queue, approve/reject/request-changes with comments
 - ✅ **Citation tracking system** - Extract, store, and validate citations from RAG search results
 - ✅ **Basic compliance guardrails** - Restricted terms checking, mandatory disclosure injection, risk scoring (0-100)
 - ✅ **Content versioning** - Track content revisions and versions
 - ✅ **Review API** - Full CRUD operations for content reviews with status workflow
+
+**Sprint 2 - Compliance Engine & Risk Scoring:**
+
 - ✅ **Policy Rules Engine** - Tenant-specific policy configuration (prohibited terms, required disclosures, content restrictions, risk thresholds)
 - ✅ **Multi-Factor Risk Scoring** - Content sensitivity, citation confidence, user profile risk, historical patterns with automated routing
 - ✅ **Compliance Dashboard** - Policy configuration UI, violation reports, risk score visualization
-- ✅ **Disclosure Management** - Context-aware disclosure selection and automatic injection
+- ✅ **Disclosure Management** - Context-aware disclosure selection and automatic injection (8 disclosure templates)
 - ✅ **Content Validation Pipeline** - Pre/post-generation validation, fact checking, citation verification, hallucination detection
-- ✅ **Audit Logging System** - Comprehensive logging to Azure Blob Storage with retention policies
+- ✅ **Audit Logging System** - Comprehensive logging to Azure Blob Storage with retention policies (365 days)
 
-### 🚧 Planned Features (Sprint 3+)
+**Sprint 3 - Data Ingestion & Content Sources:**
+
+- ✅ **Market Data Ingestion** - Automated ingestion from Alpha Maven API with scheduled Azure Function
+- ✅ **Content Source Management** - RSS feed ingestion with reliability scoring
+- ✅ **Vector Indexing Pipeline** - Automatic indexing of ingested content to Azure AI Search with metadata
+- ✅ **House Views Integration** - Tenant-specific investment philosophy automatically included in briefing generation
+- ✅ **Source Management UI** - Configure and monitor data sources via `/sources` page
+- ✅ **Ingestion Scheduler** - Timer-triggered Azure Function (runs every 6 hours) for automated data collection
+- ✅ **Market Data in Briefings** - Recent market data automatically included in market briefing generation
+- ✅ **Content Sources in RAG** - Ingested RSS feeds and content sources automatically used in RAG search with tenant filtering
+
+### 🚧 Planned Features (Sprint 4+)
 
 - Content analytics and engagement tracking (Sprint 4)
 - Multi-channel delivery (email, mobile app, audio) (Sprint 5)
@@ -286,7 +353,7 @@ See [Technical Implementation Plan](../.cursor/plans/technical-implementation-pl
 
 ### For Advisors
 
-✅ **Advisor review workflow and compliance engine are now fully available!** Advisors can:
+✅ **Advisor review workflow, compliance engine, and data ingestion are now fully available!** Advisors can:
 
 1. **Access the review queue** (`/reviews`) to see pending content awaiting review
 2. **Review content** - View full content preview, see version information, and review history
@@ -297,8 +364,19 @@ See [Technical Implementation Plan](../.cursor/plans/technical-implementation-pl
 7. **View risk scores** - See multi-factor risk scoring breakdown (content sensitivity, citations, user profile, historical patterns)
 8. **Monitor violations** - View policy violations and compliance reports
 9. **Manage disclosures** - Configure context-aware disclosure templates
+10. **Manage data sources** (`/sources`) - Configure RSS feeds and market data ingestion
+11. **Monitor ingestion** - View ingestion status, last run times, and source reliability metrics
+12. **Create house views** - Define tenant-specific investment philosophy that automatically influences all briefings
+
+**How Sprint 3 Features Enhance Content:**
+
+- **Market Data**: Briefings now include real-time market data from Alpha Maven (prices, changes, trends)
+- **House Views**: All briefings automatically incorporate your firm's investment philosophy and house views
+- **Content Sources**: RAG search now uses ingested RSS feeds and content sources, providing more relevant and up-to-date citations
+- **Automated Ingestion**: Data is automatically collected every 6 hours via Azure Function, keeping content fresh
 
 **Coming Later:**
+
 - Monitor content analytics and client engagement (Sprint 4)
 - Advanced audit log search interface (basic logging implemented)
 
@@ -308,4 +386,3 @@ See [Technical Implementation Plan](../.cursor/plans/technical-implementation-pl
 - [Technical Implementation Plan](../.cursor/plans/technical-implementation-plan.md) - Development roadmap
 - [Setup Guide](../SETUP.md) - Environment setup and configuration
 - [Theme Configuration](./THEME_CONFIGURATION.md) - Multi-tenant branding setup
-
