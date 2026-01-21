@@ -4,6 +4,8 @@
   "description": "Azure Functions for Insight Studio",
   "main": "index.js",
   "scripts": {
+    "sync": "pwsh -ExecutionPolicy Bypass -File ./sync-libs.ps1",
+    "prebuild": "npm run sync",
     "build": "tsc",
     "watch": "tsc -w",
     "prestart": "npm run build",

@@ -1,5 +1,5 @@
 # Azure Functions Deployment Script
-# This script prepares and deploys the Azure Functions with compiled lib dependencies
+# This script syncs libraries, builds, and deploys the Azure Functions
 
 param(
     [Parameter(Mandatory = $true)]
@@ -7,6 +7,9 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
+
+Write-Host "Syncing library files from parent directory..." -ForegroundColor Cyan
+& (Join-Path $PSScriptRoot "sync-libs.ps1")
 
 Write-Host "Building Azure Functions..." -ForegroundColor Cyan
 cd $PSScriptRoot
