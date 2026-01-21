@@ -12,12 +12,14 @@
   },
   "dependencies": {
     "@azure/functions": "^4.9.0",
-    "@prisma/client": "^6.19.0"
+    "@azure/search-documents": "^12.1.0",
+    "@prisma/adapter-mssql": "^6.19.0",
+    "@prisma/client": "^6.19.0",
+    "mssql": "^11.0.1",
+    "openai": "^4.75.0"
   },
   "devDependencies": {
     "@types/node": "^24.10.0",
     "typescript": "^5.9.3"
   }
 }
-
-
