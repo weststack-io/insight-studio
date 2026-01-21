@@ -45,7 +45,7 @@ export interface GeneratedLesson {
  * Generate a weekly briefing (market or portfolio)
  */
 export async function generateBriefing(
-  context: BriefingContext,
+  context: BriefingContext
 ): Promise<GeneratedBriefing> {
   // Log portfolio data usage
   if (context.portfolioData) {
@@ -61,20 +61,20 @@ export async function generateBriefing(
             (h) =>
               `${
                 h.symbol || h.name
-              }: $${h.value.toLocaleString()} (${h.percentage.toFixed(1)}%)`,
+              }: $${h.value.toLocaleString()} (${h.percentage.toFixed(1)}%)`
           ),
         assetClasses: [
           ...new Set(
             context.portfolioData.holdings
               .map((h) => h.assetClass)
-              .filter(Boolean),
+              .filter(Boolean)
           ),
         ],
-      },
+      }
     );
   } else if (context.type === "portfolio") {
     console.log(
-      `[Generators] Warning: Portfolio briefing requested but no portfolio data provided`,
+      `[Generators] Warning: Portfolio briefing requested but no portfolio data provided`
     );
   }
 
@@ -154,7 +154,7 @@ export async function generateBriefing(
  * Generate an explainer for a complex topic
  */
 export async function generateExplainer(
-  context: ExplainerContext,
+  context: ExplainerContext
 ): Promise<GeneratedExplainer> {
   // Search for relevant context about the topic
   let searchContext = "";
@@ -202,7 +202,7 @@ export async function generateExplainer(
  * Generate a micro-lesson
  */
 export async function generateLesson(
-  context: LessonContext,
+  context: LessonContext
 ): Promise<GeneratedLesson> {
   // Search for relevant context if not provided
   let searchContext = context.searchContext || "";

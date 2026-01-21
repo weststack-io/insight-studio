@@ -15,7 +15,7 @@ export function getSearchClient(): SearchClient<Record<string, any>> {
     searchClient = new SearchClient<Record<string, any>>(
       endpoint,
       indexName,
-      new AzureKeyCredential(apiKey),
+      new AzureKeyCredential(apiKey)
     );
   }
 
@@ -34,7 +34,7 @@ export async function searchVector(
     top?: number;
     filter?: string;
     tenantId?: string;
-  },
+  }
 ): Promise<SearchResult[]> {
   const client = getSearchClient();
 
@@ -54,48 +54,52 @@ export async function searchVector(
   const results: SearchResult[] = [];
   for await (const result of searchResults.results) {
     results.push({
-      content: result.document.content || "",
+      content: result.document.content || JSON.stringify(result.document),
       score: result.score || 0,
-      metadata: {
-        title: result.document.title,
-        type: result.document.type,
-        date: result.document.date,
-        source: result.document.source,
-      },
+      metadata: result.document,
     });
   }
 
   return results;
 }
 
-export async function searchKeyword(
+export async function hybridSearch(
   query: string,
+  vectorQuery?: {
+    vector: number[];
+    kNearestNeighborsCount?: number;
+  },
   options?: {
     top?: number;
     filter?: string;
-  },
+  }
 ): Promise<SearchResult[]> {
   const client = getSearchClient();
 
-  const searchResults = await client.search(query, {
-    searchMode: "all",
-    queryType: "simple",
+  const searchOptions: any = {
     top: options?.top ?? 5,
     filter: options?.filter,
     includeTotalCount: true,
-  });
+  };
+
+  if (vectorQuery) {
+    searchOptions.vectorQueries = [
+      {
+        kind: "vector",
+        vector: vectorQuery.vector,
+        kNearestNeighborsCount: vectorQuery.kNearestNeighborsCount ?? 5,
+      },
+    ];
+  }
+
+  const searchResults = await client.search(query, searchOptions);
 
   const results: SearchResult[] = [];
   for await (const result of searchResults.results) {
     results.push({
-      content: result.document.content || "",
+      content: result.document.content || JSON.stringify(result.document),
       score: result.score || 0,
-      metadata: {
-        title: result.document.title,
-        type: result.document.type,
-        date: result.document.date,
-        source: result.document.source,
-      },
+      metadata: result.document,
     });
   }
 

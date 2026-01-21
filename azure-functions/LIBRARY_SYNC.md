@@ -38,14 +38,23 @@ npm run sync
 
 ## What Gets Synced
 
-The sync copies these files from the parent `../lib/` directory:
+The sync copies and **transforms** these files from the parent `../lib/` directory:
 
 - ✅ `db/adapter.ts` - Database adapter for Prisma with MSSQL
 - ✅ `azure/openai.ts` - Azure OpenAI client
 - ✅ `azure/search.ts` - Azure AI Search client
 - ✅ `ai/generators.ts` - AI content generation
 - ✅ `ai/prompts.ts` - Prompt templates
-- ✅ `types/index.ts` - TypeScript type definitions
+- ✅ `types/index.ts` - TypeScript type definitions (from `../types/`)
+
+### Import Transformation
+
+During sync, the script automatically transforms import paths:
+
+- `from "@/lib/azure/openai"` → `from "../azure/openai"`
+- `from "@/types"` → `from "../types"`
+
+This ensures the code compiles correctly in the self-contained Azure Functions directory.
 
 **Note:** The ingestion stub files (`lib/ingestion/*`) are NOT synced. They use simplified implementations specific to the Azure Functions deployment.
 

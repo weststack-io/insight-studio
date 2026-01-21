@@ -41,7 +41,7 @@ export interface LessonContext {
 }
 
 export function getBriefingPrompt(
-  context: BriefingContext,
+  context: BriefingContext
 ): Array<{ role: "system" | "user" | "assistant"; content: string }> {
   const {
     type,
@@ -101,7 +101,7 @@ Format the response as JSON with the following structure:
 - Top Holdings: ${topHoldings}
 - Asset Classes: ${[
         ...new Set(
-          portfolioData.holdings.map((h) => h.assetClass).filter(Boolean),
+          portfolioData.holdings.map((h) => h.assetClass).filter(Boolean)
         ),
       ].join(", ")}`;
     } else {
@@ -119,7 +119,7 @@ Format the response as JSON with the following structure:
 
   if (userPreferences && userPreferences.length > 0) {
     userPrompt += `\n\nUser is particularly interested in: ${userPreferences.join(
-      ", ",
+      ", "
     )}`;
   }
 
@@ -130,7 +130,7 @@ Format the response as JSON with the following structure:
 }
 
 export function getExplainerPrompt(
-  context: ExplainerContext,
+  context: ExplainerContext
 ): Array<{ role: "system" | "user" | "assistant"; content: string }> {
   const { topic, searchContext, language, sophisticationLevel } = context;
 
@@ -170,7 +170,7 @@ Provide a comprehensive explanation that helps a high net worth investor underst
 }
 
 export function getLessonPrompt(
-  context: LessonContext,
+  context: LessonContext
 ): Array<{ role: "system" | "user" | "assistant"; content: string }> {
   const { topic, generation, language, sophisticationLevel, searchContext } =
     context;

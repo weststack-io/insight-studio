@@ -29,7 +29,7 @@ export async function generateText(
   options?: {
     temperature?: number;
     maxTokens?: number;
-  },
+  }
 ): Promise<string> {
   const client = getOpenAIClient();
   const deployment =

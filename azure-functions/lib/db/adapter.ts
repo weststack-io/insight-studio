@@ -76,3 +76,4 @@ export function createMssqlAdapter(connectionString?: string): PrismaMssql {
   const mssqlConfig = parseConnectionString(connString);
   return new PrismaMssql(mssqlConfig);
 }
+
