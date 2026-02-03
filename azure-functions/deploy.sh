@@ -1,6 +1,6 @@
 #!/bin/bash
 # Azure Functions Deployment Script
-# This script prepares and deploys the Azure Functions with compiled lib dependencies
+# This script syncs libraries, builds, and deploys the Azure Functions
 
 set -e
 
@@ -12,6 +12,9 @@ fi
 FUNCTION_APP_NAME=$1
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 PROJECT_ROOT="$( cd "$SCRIPT_DIR/.." && pwd )"
+
+echo "Syncing library files from parent directory..."
+bash "$SCRIPT_DIR/sync-libs.sh"
 
 echo "Building Azure Functions..."
 cd "$SCRIPT_DIR"

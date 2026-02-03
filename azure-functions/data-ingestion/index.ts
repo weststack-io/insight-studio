@@ -1,9 +1,12 @@
 import { app, InvocationContext, Timer } from "@azure/functions";
 import { PrismaClient } from "@prisma/client";
-import { ingestMarketData } from "../../lib/ingestion/market-data";
-import { ingestRSSFeed } from "../../lib/ingestion/content-sources";
-import { indexMarketData, indexContentSources } from "../../lib/ingestion/indexing";
-import { createMssqlAdapter } from "../../lib/db/adapter";
+import { ingestMarketData } from "../lib/ingestion/market-data";
+import { ingestRSSFeed } from "../lib/ingestion/content-sources";
+import {
+  indexMarketData,
+  indexContentSources,
+} from "../lib/ingestion/indexing";
+import { createMssqlAdapter } from "../lib/db/adapter";
 
 const prisma = new PrismaClient({
   adapter: createMssqlAdapter(),
@@ -15,7 +18,7 @@ const prisma = new PrismaClient({
  */
 async function dataIngestionScheduler(
   myTimer: Timer,
-  context: InvocationContext
+  context: InvocationContext,
 ): Promise<void> {
   context.log("Starting data ingestion scheduler");
 
@@ -24,18 +27,19 @@ async function dataIngestionScheduler(
     const ingestionConfigs = await prisma.contentIngestion.findMany({
       where: {
         status: "active",
-        OR: [
-          { nextRun: null },
-          { nextRun: { lte: new Date() } },
-        ],
+        OR: [{ nextRun: null }, { nextRun: { lte: new Date() } }],
       },
     });
 
-    context.log(`Found ${ingestionConfigs.length} active ingestion configurations`);
+    context.log(
+      `Found ${ingestionConfigs.length} active ingestion configurations`,
+    );
 
     for (const config of ingestionConfigs) {
       try {
-        context.log(`Processing ingestion: ${config.sourceType} (ID: ${config.id})`);
+        context.log(
+          `Processing ingestion: ${config.sourceType} (ID: ${config.id})`,
+        );
 
         const configData = JSON.parse(config.config);
 
@@ -64,11 +68,13 @@ async function dataIngestionScheduler(
           },
         });
 
-        context.log(`Completed ingestion: ${config.sourceType} (ID: ${config.id})`);
+        context.log(
+          `Completed ingestion: ${config.sourceType} (ID: ${config.id})`,
+        );
       } catch (error) {
         context.log(
           `Error processing ingestion ${config.id}:`,
-          error instanceof Error ? error.message : String(error)
+          error instanceof Error ? error.message : String(error),
         );
 
         // Update status to error (but don't stop other ingestions)
@@ -96,7 +102,7 @@ async function dataIngestionScheduler(
 async function processMarketDataIngestion(
   config: any,
   configData: any,
-  context: InvocationContext
+  context: InvocationContext,
 ): Promise<void> {
   context.log("Processing market data ingestion");
 
@@ -105,7 +111,7 @@ async function processMarketDataIngestion(
     const result = await ingestMarketData(configData.tenantId);
 
     context.log(
-      `Market data ingestion completed: ${result.dataPoints} data points ingested`
+      `Market data ingestion completed: ${result.dataPoints} data points ingested`,
     );
 
     if (result.errors && result.errors.length > 0) {
@@ -117,11 +123,11 @@ async function processMarketDataIngestion(
       context.log("Indexing market data to search index");
       const indexingResult = await indexMarketData(
         configData.tenantId,
-        result.dataPoints
+        result.dataPoints,
       );
 
       context.log(
-        `Indexing completed: ${indexingResult.indexed} items indexed`
+        `Indexing completed: ${indexingResult.indexed} items indexed`,
       );
 
       if (indexingResult.errors && indexingResult.errors.length > 0) {
@@ -132,7 +138,7 @@ async function processMarketDataIngestion(
     context.log(
       `Error in market data ingestion: ${
         error instanceof Error ? error.message : String(error)
-      }`
+      }`,
     );
     throw error;
   }
@@ -144,7 +150,7 @@ async function processMarketDataIngestion(
 async function processRSSIngestion(
   config: any,
   configData: any,
-  context: InvocationContext
+  context: InvocationContext,
 ): Promise<void> {
   context.log(`Processing RSS ingestion: ${configData.url}`);
 
@@ -156,11 +162,11 @@ async function processRSSIngestion(
         tags: configData.tags,
         reliabilityScore: configData.reliabilityScore,
       },
-      configData.tenantId
+      configData.tenantId,
     );
 
     context.log(
-      `RSS ingestion completed: ${result.itemsCreated} items created`
+      `RSS ingestion completed: ${result.itemsCreated} items created`,
     );
 
     if (result.errors && result.errors.length > 0) {
@@ -172,11 +178,11 @@ async function processRSSIngestion(
       context.log("Indexing RSS content to search index");
       const indexingResult = await indexContentSources(
         configData.tenantId,
-        result.itemsCreated
+        result.itemsCreated,
       );
 
       context.log(
-        `Indexing completed: ${indexingResult.indexed} items indexed`
+        `Indexing completed: ${indexingResult.indexed} items indexed`,
       );
 
       if (indexingResult.errors && indexingResult.errors.length > 0) {
@@ -187,7 +193,7 @@ async function processRSSIngestion(
     context.log(
       `Error in RSS ingestion: ${
         error instanceof Error ? error.message : String(error)
-      }`
+      }`,
     );
     throw error;
   }
@@ -196,10 +202,7 @@ async function processRSSIngestion(
 /**
  * Calculate next run time based on source type and configuration
  */
-function calculateNextRun(
-  sourceType: string,
-  configData: any
-): Date | null {
+function calculateNextRun(sourceType: string, configData: any): Date | null {
   const now = new Date();
   const schedule = configData.schedule || "daily";
 
@@ -213,9 +216,7 @@ function calculateNextRun(
     case "custom":
       // For custom schedules, expect a cron expression or interval in configData
       if (configData.intervalMinutes) {
-        return new Date(
-          now.getTime() + configData.intervalMinutes * 60 * 1000
-        );
+        return new Date(now.getTime() + configData.intervalMinutes * 60 * 1000);
       }
       return new Date(now.getTime() + 24 * 60 * 60 * 1000); // Default to daily
     default:
@@ -227,4 +228,3 @@ app.timer("dataIngestionScheduler", {
   schedule: "0 */6 * * *", // Every 6 hours
   handler: dataIngestionScheduler,
 });
-

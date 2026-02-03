@@ -1,7 +1,7 @@
 import { app, InvocationContext, Timer } from "@azure/functions";
 import { PrismaClient } from "@prisma/client";
-import { generateBriefing } from "../../lib/ai/generators";
-import { createMssqlAdapter } from "../../lib/db/adapter";
+import { generateBriefing } from "../lib/ai/generators";
+import { createMssqlAdapter } from "../lib/db/adapter";
 // import { getAddeparClient } from "../../lib/addepar/client";
 
 const prisma = new PrismaClient({
@@ -14,7 +14,7 @@ const prisma = new PrismaClient({
  */
 async function weeklyBriefingsGenerator(
   myTimer: Timer,
-  context: InvocationContext
+  context: InvocationContext,
 ): Promise<void> {
   context.log("Starting weekly briefings generation");
 
@@ -49,8 +49,8 @@ async function weeklyBriefingsGenerator(
 
     const existingKeys = new Set(
       existingBriefings.map(
-        (b: { userId: string; type: string }) => `${b.userId}-${b.type}`
-      )
+        (b: { userId: string; type: string }) => `${b.userId}-${b.type}`,
+      ),
     );
 
     // const addeparClient = getAddeparClient();
@@ -75,7 +75,7 @@ async function weeklyBriefingsGenerator(
                   generation: user.generation as any,
                   sophisticationLevel: user.sophisticationLevel as any,
                   userPreferences: user.userPreferences.map(
-                    (p: { topic: string }) => p.topic
+                    (p: { topic: string }) => p.topic,
                   ),
                 });
 
@@ -171,12 +171,12 @@ async function weeklyBriefingsGenerator(
             context.log(`Error: Failed to process user ${user.id}:`, error);
             errorCount++;
           }
-        })
+        }),
       );
     }
 
     context.log(
-      `Weekly briefings generation completed. Success: ${successCount}, Errors: ${errorCount}`
+      `Weekly briefings generation completed. Success: ${successCount}, Errors: ${errorCount}`,
     );
   } catch (error) {
     context.log("Error: Failed to generate weekly briefings:", error);
