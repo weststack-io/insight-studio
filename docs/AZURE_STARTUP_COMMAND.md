@@ -1,28 +1,55 @@
 # Azure App Service Startup Command Configuration
 
-## Issue
+## Do You Need a Custom Startup Command?
 
-Azure App Service may use a different version of Prisma CLI than your project, causing version conflicts.
+**Usually no.** Your `package.json` has:
 
-## Solution
+- **`"postinstall": "prisma generate"`** — when Azure runs `npm install` during deploy, the Prisma client is already generated.
+- **`"start": "node server.js"`** — the app just runs `node server.js`.
 
-Use the local Prisma version from `node_modules` instead of the global one.
+So you typically **do not need to run `prisma generate` at startup**. You only need a startup command that runs your app from the correct directory, because the startup script runs from `/opt/startup/`, not from your app folder (`/home/site/wwwroot`).
 
-## Correct Startup Command
+## Recommended Startup Command (Minimal)
 
-Set the startup command in Azure App Service to:
-
-```bash
-./node_modules/.bin/prisma generate && node server.js
-```
-
-Or using npx (which should use local version):
+Use the smallest command that works: change to the app directory, then start the app. No `prisma generate` needed (postinstall already did it).
 
 ```bash
-npx prisma generate && node server.js
+cd /home/site/wwwroot && node server.js
 ```
 
-**Note:** With Prisma 7, the configuration is now in `prisma/config.ts` instead of `schema.prisma`, so make sure that file is deployed.
+Or, if you prefer to use npm:
+
+```bash
+cd /home/site/wwwroot && npm start
+```
+
+**Why `cd /home/site/wwwroot`?** The startup script runs from `/opt/startup/`. Your app and `node_modules` live in `/home/site/wwwroot`. Without the `cd`, `node server.js` would run in the wrong place and fail.
+
+---
+
+## Why Was “prisma generate” in the Startup Command Before?
+
+Someone had added **`npx prisma generate && node server.js`** (or similar) to work around a missing Prisma client. That caused two problems:
+
+1. **WASM error** — `npx` ran Prisma from its cache (`/root/.npm/_npx/...`) instead of your app’s `node_modules`. That cached Prisma looked for `@prisma/client` in the wrong place and failed with:  
+   `Cannot find module '.../query_compiler_fast_bg.sqlserver.wasm-base64.js'`
+2. **“prisma: not found”** — Using `./node_modules/.bin/prisma` without `cd` made the script look for `/opt/startup/node_modules`, which doesn’t exist.
+
+**The real fix:** Rely on **postinstall** to run `prisma generate` during deploy. At startup, only run the app from the app directory. No Prisma CLI in the startup command.
+
+---
+
+## When Would You Run prisma generate at Startup?
+
+Only if your deployment **does not** run `npm install` (or skips postinstall) and you deploy without a pre-generated client. Then you’d need something like:
+
+```bash
+cd /home/site/wwwroot && ./node_modules/.bin/prisma generate && node server.js
+```
+
+(And `node_modules` must already exist in wwwroot.) For most Azure Node setups, postinstall runs on deploy, so the minimal command above is enough.
+
+**Note:** With Prisma 7, the configuration is in `prisma/config.ts`; ensure that file is deployed.
 
 ## Setting the Startup Command
 
@@ -32,7 +59,7 @@ npx prisma generate && node server.js
 az webapp config set \
   --name <app-service-name> \
   --resource-group <resource-group-name> \
-  --startup-file "./node_modules/.bin/prisma generate && node server.js"
+  --startup-file "cd /home/site/wwwroot && node server.js"
 ```
 
 ### Via Azure Portal
@@ -41,52 +68,33 @@ az webapp config set \
 2. Navigate to: **Settings** → **Configuration** → **General settings**
 3. Under **Startup Command**, enter:
    ```
-   ./node_modules/.bin/prisma generate && node server.js
+   cd /home/site/wwwroot && node server.js
    ```
 4. Click **Save**
 5. Restart the App Service
 
-## Alternative: Pin Prisma Version
-
-If you want to ensure a specific Prisma version is used, you can:
-
-1. Update `package.json` to pin the exact version:
-
-   ```json
-   "prisma": "6.19.0"
-   ```
-
-2. Ensure `package-lock.json` is committed and deployed
-
-3. Use the startup command:
-   ```
-   npm install && ./node_modules/.bin/prisma generate && node server.js
-   ```
-
 ## Troubleshooting
 
-### Check Prisma Version in Azure
+### Error: Cannot find module '.../query_compiler_fast_bg.sqlserver.wasm-base64.js'
 
-SSH into your App Service and check:
+**Cause:** The startup command was using `npx prisma generate`. npx runs Prisma from its cache, which looks for `@prisma/client` in the wrong place.
 
-```bash
-cd /home/site/wwwroot
-./node_modules/.bin/prisma --version
-npx prisma --version
-```
-
-### Verify Local Prisma Exists
+**Fix:** Do not run `prisma generate` (or npx) in the startup command. Rely on `postinstall` during deploy. Use only:
 
 ```bash
-ls -la node_modules/.bin/prisma
-ls -la node_modules/prisma/
+cd /home/site/wwwroot && node server.js
 ```
 
-### Force Use Local Version
+### Error: ./node_modules/.bin/prisma: not found
 
-If npx is still using the wrong version:
+**Cause:** The startup script runs from `/opt/startup/`, so `./node_modules/.bin/prisma` looks for `/opt/startup/node_modules`, which does not exist.
+
+**Fix:** Do not run prisma at startup. Use the minimal command:
 
 ```bash
-# In startup command, use explicit path
-./node_modules/.bin/prisma generate && node server.js
+cd /home/site/wwwroot && node server.js
 ```
+
+### App still fails at runtime with Prisma/client errors
+
+If the Prisma client is missing at runtime (e.g. deploy doesn’t run `npm install` or postinstall), ensure your deployment runs `npm install` from the app root so `postinstall` runs `prisma generate`. If you truly cannot run install on deploy, then you’d need a startup command that runs from wwwroot and has node_modules (e.g. `cd /home/site/wwwroot && ./node_modules/.bin/prisma generate && node server.js`), but that only works if `node_modules` already exists in wwwroot.
