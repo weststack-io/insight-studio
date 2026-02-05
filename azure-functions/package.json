@@ -2,26 +2,32 @@
   "name": "insightstudio-functions",
   "version": "1.0.0",
   "description": "Azure Functions for Insight Studio",
-  "main": "index.js",
+  "main": "dist/src/index.js",
   "scripts": {
-    "sync": "pwsh -ExecutionPolicy Bypass -File ./sync-libs.ps1",
-    "prebuild": "npm run sync",
     "build": "tsc",
     "watch": "tsc -w",
     "prestart": "npm run build",
     "start": "func start",
-    "test": "echo \"No tests specified\" && exit 0"
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "postinstall": "prisma generate --schema=./prisma/schema.prisma || true"
   },
   "dependencies": {
     "@azure/functions": "^4.9.0",
     "@azure/search-documents": "^12.1.0",
-    "@prisma/adapter-mssql": "^6.19.0",
-    "@prisma/client": "^6.19.0",
+    "@prisma/adapter-mssql": "^7.1.0",
+    "@prisma/client": "^7.1.0",
+    "@prisma/client-runtime-utils": "^7.1.0",
     "mssql": "^11.0.1",
-    "openai": "^4.75.0"
+    "openai": "^4.75.0",
+    "prisma": "^7.1.0"
   },
   "devDependencies": {
+    "@types/jest": "^29.5.14",
     "@types/node": "^24.10.0",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.2.5",
     "typescript": "^5.9.3"
   }
 }

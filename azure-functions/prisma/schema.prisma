@@ -1,0 +1,341 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "debian-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "sqlserver"
+}
+
+model Tenant {
+  id              String   @id @default(uuid())
+  name            String
+  applicationName String?  @map("application_name")
+  logoUrl         String?  @map("logo_url")
+  primaryColor    String   @default("#000000") @map("primary_color")
+  secondaryColor  String   @default("#666666") @map("secondary_color")
+  fontFamily      String?  @map("font_family")
+  domain          String?  @unique
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  users          User[]
+  briefings      Briefing[]
+  explainers     Explainer[]
+  lessons        Lesson[]
+  contentSources ContentSource[]
+  policies       Policy[]
+  marketData     MarketData[]
+  houseViews     HouseView[]
+
+  @@map("tenants")
+}
+
+model User {
+  id                  String    @id @default(uuid())
+  tenantId            String?   @map("tenant_id")
+  azureAdId           String?   @unique @map("azure_ad_id")
+  name                String?
+  email               String    @unique
+  emailVerified       DateTime? @map("email_verified")
+  image               String?   @db.NVarChar(Max)
+  role                String? // family_member, trustee, advisor
+  language            String?   @default("en") // en, es, fr, etc.
+  generation          String? // GenX, Millennial, GenZ, etc.
+  sophisticationLevel String?   @map("sophistication_level") // beginner, intermediate, advanced
+  preferences         String?   @default("{}") // JSON string for user preferences
+  createdAt           DateTime  @default(now()) @map("created_at")
+  updatedAt           DateTime  @updatedAt @map("updated_at")
+
+  tenant            Tenant?          @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  briefings         Briefing[]
+  userPreferences   UserPreference[]
+  accounts          Account[]
+  sessions          Session[]
+  contentReviews    ContentReview[]
+  reviewedBriefings Briefing[]       @relation("Reviewer")
+
+  @@map("users")
+}
+
+// NextAuth required models
+model Account {
+  id                String  @id @default(uuid())
+  userId            String  @map("user_id")
+  type              String
+  provider          String
+  providerAccountId String  @map("provider_account_id")
+  refresh_token     String? @map("refresh_token") @db.NVarChar(Max)
+  access_token      String? @map("access_token") @db.NVarChar(Max)
+  expires_at        Int?
+  token_type        String? @map("token_type")
+  scope             String? @db.NVarChar(Max)
+  id_token          String? @map("id_token") @db.NVarChar(Max)
+  session_state     String? @map("session_state")
+  ext_expires_in    Int?    @map("ext_expires_in")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(uuid())
+  sessionToken String   @unique @map("session_token")
+  userId       String   @map("user_id")
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("sessions")
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verification_tokens")
+}
+
+model Briefing {
+  id             String    @id @default(uuid())
+  userId         String    @map("user_id")
+  tenantId       String    @map("tenant_id")
+  type           String // market, portfolio
+  content        String    @db.NVarChar(Max) // JSON or text content
+  generatedAt    DateTime  @default(now()) @map("generated_at")
+  weekStartDate  DateTime  @map("week_start_date")
+  status         String    @default("draft") // draft, pending_review, approved, published
+  version        Int       @default(1)
+  reviewerId     String?   @map("reviewer_id")
+  reviewedAt     DateTime? @map("reviewed_at")
+  citations      String?   @db.NVarChar(Max) // JSON array of citations
+  riskScore      Float?    @map("risk_score")
+  requiresReview Boolean   @default(false) @map("requires_review")
+
+  user     User   @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  reviewer User?  @relation("Reviewer", fields: [reviewerId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([userId, weekStartDate])
+  @@index([tenantId, weekStartDate])
+  @@index([status])
+  @@map("briefings")
+}
+
+model Explainer {
+  id             String   @id @default(uuid())
+  tenantId       String   @map("tenant_id")
+  topic          String
+  content        String   @db.NVarChar(Max)
+  language       String   @default("en")
+  generatedAt    DateTime @default(now()) @map("generated_at")
+  cached         Boolean  @default(true)
+  citations      String?  @db.NVarChar(Max) // JSON array of citations
+  riskScore      Float?   @map("risk_score")
+  requiresReview Boolean  @default(false) @map("requires_review")
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, topic, language])
+  @@index([tenantId, topic])
+  @@index([riskScore])
+  @@map("explainers")
+}
+
+model Lesson {
+  id                  String   @id @default(uuid())
+  tenantId            String   @map("tenant_id")
+  topic               String
+  content             String   @db.NVarChar(Max)
+  generation          String? // GenX, Millennial, GenZ, etc.
+  language            String   @default("en")
+  sophisticationLevel String?  @map("sophistication_level")
+  generatedAt         DateTime @default(now()) @map("generated_at")
+  citations           String?  @db.NVarChar(Max) // JSON array of citations
+  riskScore           Float?   @map("risk_score")
+  requiresReview      Boolean  @default(false) @map("requires_review")
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, generation, language])
+  @@index([tenantId, topic])
+  @@index([riskScore])
+  @@map("lessons")
+}
+
+model UserPreference {
+  id            String   @id @default(uuid())
+  userId        String   @map("user_id")
+  topic         String
+  interestLevel String   @map("interest_level") // low, medium, high
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, topic])
+  @@index([userId])
+  @@map("user_preferences")
+}
+
+model ContentReview {
+  id          String    @id @default(uuid())
+  contentId   String    @map("content_id")
+  contentType String    @map("content_type") // briefing, explainer, lesson
+  status      String // pending_review, approved, rejected, changes_requested
+  reviewerId  String?   @map("reviewer_id")
+  reviewedAt  DateTime? @map("reviewed_at")
+  comments    String?   @db.NVarChar(Max)
+  version     Int       @default(1)
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  reviewer User? @relation(fields: [reviewerId], references: [id], onDelete: NoAction)
+
+  @@index([contentId, contentType])
+  @@index([status])
+  @@index([reviewerId])
+  @@map("content_reviews")
+}
+
+model ContentSource {
+  id               String    @id @default(uuid())
+  type             String // research, news, market_data, document
+  title            String
+  url              String?   @db.NVarChar(Max)
+  date             DateTime?
+  reliabilityScore Float?    @map("reliability_score") // 0-1
+  tags             String?   @db.NVarChar(Max) // JSON array of tags
+  tenantId         String?   @map("tenant_id")
+  createdAt        DateTime  @default(now()) @map("created_at")
+  updatedAt        DateTime  @updatedAt @map("updated_at")
+
+  tenant    Tenant?          @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  citations Citation[]
+  metadata  SourceMetadata[]
+
+  @@index([tenantId])
+  @@index([type])
+  @@map("content_sources")
+}
+
+model Citation {
+  id              String   @id @default(uuid())
+  contentId       String   @map("content_id")
+  contentType     String   @map("content_type") // briefing, explainer, lesson
+  sourceId        String?  @map("source_id")
+  text            String   @db.NVarChar(Max)
+  confidenceScore Float    @map("confidence_score") // 0-1
+  position        Int? // Position in content (character offset or section index)
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  source ContentSource? @relation(fields: [sourceId], references: [id], onDelete: SetNull)
+
+  @@index([contentId, contentType])
+  @@index([sourceId])
+  @@map("citations")
+}
+
+model ContentVersion {
+  id          String   @id @default(uuid())
+  contentId   String   @map("content_id")
+  contentType String   @map("content_type") // briefing, explainer, lesson
+  version     Int
+  content     String   @db.NVarChar(Max)
+  generatedAt DateTime @default(now()) @map("generated_at")
+  status      String   @default("draft") // draft, pending_review, approved, published
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  @@unique([contentId, contentType, version])
+  @@index([contentId, contentType])
+  @@map("content_versions")
+}
+
+model Policy {
+  id        String   @id @default(uuid())
+  tenantId  String   @map("tenant_id")
+  name      String
+  type      String // prohibited_terms, required_disclosures, content_restrictions, risk_thresholds
+  config    String   @db.NVarChar(Max) // JSON configuration
+  enabled   Boolean  @default(true)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, name])
+  @@index([tenantId, type])
+  @@map("policies")
+}
+
+model MarketData {
+  id        String   @id @default(uuid())
+  type      String // equity, bond, commodity, currency, macro, etc.
+  source    String // alpha_maven, etc.
+  data      String   @db.NVarChar(Max) // JSON data
+  date      DateTime
+  tenantId  String?  @map("tenant_id")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  tenant Tenant? @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, date])
+  @@index([type, date])
+  @@index([source, date])
+  @@map("market_data")
+}
+
+model ContentIngestion {
+  id         String    @id @default(uuid())
+  sourceType String    @map("source_type") // market_data, rss, pdf, etc.
+  status     String // active, paused, error
+  lastRun    DateTime? @map("last_run")
+  nextRun    DateTime? @map("next_run")
+  config     String    @db.NVarChar(Max) // JSON configuration
+  createdAt  DateTime  @default(now()) @map("created_at")
+  updatedAt  DateTime  @updatedAt @map("updated_at")
+
+  @@index([sourceType, status])
+  @@index([nextRun])
+  @@map("content_ingestion")
+}
+
+model SourceMetadata {
+  id        String   @id @default(uuid())
+  sourceId  String   @map("source_id") // References ContentSource.id
+  key       String
+  value     String   @db.NVarChar(Max)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  source ContentSource @relation(fields: [sourceId], references: [id], onDelete: Cascade)
+
+  @@unique([sourceId, key])
+  @@index([sourceId])
+  @@map("source_metadata")
+}
+
+model HouseView {
+  id        String   @id @default(uuid())
+  tenantId  String   @map("tenant_id")
+  title     String
+  content   String   @db.NVarChar(Max)
+  version   Int      @default(1)
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, isActive])
+  @@map("house_views")
+}

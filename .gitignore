@@ -52,6 +52,8 @@ azure-functions/dist/
 azure-functions/.vscode/
 azure-functions/local.settings.json
 azure-functions/.funcignore
+azure-functions/lib/**/*.js
+azure-functions/lib/**/*.js.map
 
 # Azure Infrastructure
 # Ignore parameter files with sensitive data (keep templates)

@@ -13,11 +13,13 @@
     "moduleResolution": "node"
   },
   "include": [
-    "**/*.ts"
+    "src/**/*.ts",
+    "lib/**/*.ts"
   ],
   "exclude": [
     "node_modules",
-    "dist"
+    "dist",
+    "**/*.test.ts"
   ]
 }
 

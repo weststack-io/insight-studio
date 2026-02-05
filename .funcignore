@@ -8,7 +8,8 @@ out
 build
 # Include dist - we need compiled lib files for deployment
 # Include *.ts - Azure needs source files if using --typescript --build remote
-node_modules
+# Exclude root node_modules but keep azure-functions/node_modules
+/node_modules
 app
 components
 infrastructure

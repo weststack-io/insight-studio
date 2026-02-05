@@ -1,7 +1,7 @@
 import { app, InvocationContext, Timer } from "@azure/functions";
 import { PrismaClient } from "@prisma/client";
-import { generateBriefing } from "../lib/ai/generators";
-import { createMssqlAdapter } from "../lib/db/adapter";
+import { generateBriefing } from "../../lib/ai/generators";
+import { createMssqlAdapter } from "../../lib/db/adapter";
 // import { getAddeparClient } from "../../lib/addepar/client";
 
 const prisma = new PrismaClient({
@@ -186,7 +186,11 @@ async function weeklyBriefingsGenerator(
   }
 }
 
+// V4 programming model registration
 app.timer("weeklyBriefingsGenerator", {
   schedule: "0 0 9 * * 1", // Every Monday at 9 AM
   handler: weeklyBriefingsGenerator,
 });
+
+// Export for traditional function.json model (fallback)
+export { weeklyBriefingsGenerator };

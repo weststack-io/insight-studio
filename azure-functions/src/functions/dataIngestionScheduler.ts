@@ -1,12 +1,12 @@
 import { app, InvocationContext, Timer } from "@azure/functions";
 import { PrismaClient } from "@prisma/client";
-import { ingestMarketData } from "../lib/ingestion/market-data";
-import { ingestRSSFeed } from "../lib/ingestion/content-sources";
+import { ingestMarketData } from "../../lib/ingestion/market-data";
+import { ingestRSSFeed } from "../../lib/ingestion/content-sources";
 import {
   indexMarketData,
   indexContentSources,
-} from "../lib/ingestion/indexing";
-import { createMssqlAdapter } from "../lib/db/adapter";
+} from "../../lib/ingestion/indexing";
+import { createMssqlAdapter } from "../../lib/db/adapter";
 
 const prisma = new PrismaClient({
   adapter: createMssqlAdapter(),
@@ -224,7 +224,11 @@ function calculateNextRun(sourceType: string, configData: any): Date | null {
   }
 }
 
+// V4 programming model registration
 app.timer("dataIngestionScheduler", {
-  schedule: "0 */6 * * *", // Every 6 hours
+  schedule: "0 0 */6 * * *", // Every 6 hours (NCRONTAB: sec min hour day month dow)
   handler: dataIngestionScheduler,
 });
+
+// Export for traditional function.json model (fallback)
+export { dataIngestionScheduler };
