@@ -152,22 +152,24 @@ export async function generateBriefing(
           ? "weekly market trends economic conditions outlook"
           : "portfolio performance investment strategies allocation";
 
-      // Calculate date range: from 2 years ago to now (broad range to capture historical documents)
+      // Calculate date range: last month of data relative to today
       const now = new Date();
-      const twoYearsAgo = new Date(now);
-      twoYearsAgo.setFullYear(twoYearsAgo.getFullYear() - 2);
+      const oneMonthAgo = new Date(now);
+      oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
 
       // Format dates in ISO 8601 format for Azure Search filter
-      const startDate = twoYearsAgo.toISOString();
+      const startDate = oneMonthAgo.toISOString();
       const endDate = now.toISOString();
 
       // Build filter string in Azure Search OData format
-      // Field mapping: Azure Search index uses DocumentDate (not MeetingDate)
-      const dateFilter = `DocumentDate gt '${startDate}' and DocumentDate lt '${endDate}'`;
+      // - Filter by date range (last month)
+      // - Filter by DocType for 'Fund: Manager Letter' only
+      const dateFilter = `DocumentDate ge '${startDate}' and DocumentDate le '${endDate}' and DocType eq 'Fund: Manager Letter'`;
 
       searchResults = await searchVector(searchQuery, {
         top: 5,
         filter: dateFilter,
+        orderBy: ["DocumentDate desc"],
         tenantId,
       });
 

@@ -1,7 +1,11 @@
 import { SearchClient, AzureKeyCredential } from "@azure/search-documents";
 
 let searchClient: SearchClient<Record<string, any>> | null = null;
+let contentSourcesSearchClient: SearchClient<Record<string, any>> | null = null;
 
+/**
+ * Get search client for the main index (manager documents)
+ */
 export function getSearchClient(): SearchClient<Record<string, any>> {
   if (!searchClient) {
     const endpoint = process.env.AZURE_SEARCH_ENDPOINT;
@@ -22,6 +26,29 @@ export function getSearchClient(): SearchClient<Record<string, any>> {
   return searchClient;
 }
 
+/**
+ * Get search client for the content sources index (RSS, news, documents)
+ */
+export function getContentSourcesSearchClient(): SearchClient<Record<string, any>> {
+  if (!contentSourcesSearchClient) {
+    const endpoint = process.env.AZURE_SEARCH_ENDPOINT;
+    const apiKey = process.env.AZURE_SEARCH_API_KEY;
+    const indexName = process.env.AZURE_SEARCH_CONTENT_INDEX_NAME || "content-sources";
+
+    if (!endpoint || !apiKey) {
+      throw new Error("Azure AI Search credentials are not configured");
+    }
+
+    contentSourcesSearchClient = new SearchClient<Record<string, any>>(
+      endpoint,
+      indexName,
+      new AzureKeyCredential(apiKey)
+    );
+  }
+
+  return contentSourcesSearchClient;
+}
+
 export interface SearchResult {
   content: string;
   score: number;
@@ -33,6 +60,7 @@ export async function searchVector(
   options?: {
     top?: number;
     filter?: string;
+    orderBy?: string[];
     tenantId?: string;
   }
 ): Promise<SearchResult[]> {
@@ -48,6 +76,7 @@ export async function searchVector(
   const searchResults = await client.search(query, {
     top: options?.top ?? 5,
     filter: filter || undefined,
+    orderBy: options?.orderBy,
     includeTotalCount: true,
   });
 

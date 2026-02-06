@@ -33,6 +33,7 @@ export async function searchVector(
   options?: {
     top?: number;
     filter?: string;
+    orderBy?: string[];
     tenantId?: string;
   }
 ): Promise<SearchResult[]> {
@@ -48,6 +49,7 @@ export async function searchVector(
   const searchResults = await client.search(query, {
     top: options?.top ?? 5,
     filter: filter || undefined,
+    orderBy: options?.orderBy,
     includeTotalCount: true,
   });
 
