@@ -3,3 +3,4 @@
 
 import "./functions/weeklyBriefingsGenerator";
 import "./functions/dataIngestionScheduler";
+import "./functions/manualTriggers";
