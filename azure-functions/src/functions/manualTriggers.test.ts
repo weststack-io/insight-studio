@@ -8,6 +8,7 @@ const mockUser = {
 const mockBriefing = {
   findMany: jest.fn(),
   create: jest.fn(),
+  deleteMany: jest.fn(),
 };
 
 const mockTenant = {
@@ -211,7 +212,36 @@ describe("manualTriggers", () => {
 
       expect(result.status).toBe(200);
       expect(result.jsonBody.details.briefingsGenerated).toBe(0);
+      expect(result.jsonBody.details.briefingsSkipped).toBe(1);
       expect(generateBriefing).not.toHaveBeenCalled();
+    });
+
+    it("should regenerate briefings when force=true", async () => {
+      const testUser = {
+        id: "user-1",
+        tenantId: "tenant-1",
+        language: "en",
+        generation: "millennial",
+        sophisticationLevel: "intermediate",
+        userPreferences: [],
+        tenant: { id: "tenant-1" },
+      };
+
+      mockUser.findMany.mockResolvedValue([testUser]);
+      mockBriefing.findMany.mockResolvedValue([]);
+      mockBriefing.deleteMany.mockResolvedValue({ count: 1 });
+      (generateBriefing as jest.Mock).mockResolvedValue({
+        title: "Regenerated Briefing",
+        content: "New content",
+      });
+
+      const request = createMockRequest({ force: "true" });
+      const result = await capturedHandlers.triggerBriefings.handler(request, mockContext);
+
+      expect(result.status).toBe(200);
+      expect(result.jsonBody.details.forceRegenerate).toBe(true);
+      expect(result.jsonBody.details.briefingsGenerated).toBe(1);
+      expect(generateBriefing).toHaveBeenCalled();
     });
 
     it("should return 500 on database error", async () => {
@@ -225,7 +255,7 @@ describe("manualTriggers", () => {
       expect(result.jsonBody.message).toContain("Database connection failed");
     });
 
-    it("should include duration in response", async () => {
+    it("should include duration and weekStartDate in response", async () => {
       mockUser.findMany.mockResolvedValue([]);
       mockBriefing.findMany.mockResolvedValue([]);
 
@@ -233,6 +263,7 @@ describe("manualTriggers", () => {
       const result = await capturedHandlers.triggerBriefings.handler(request, mockContext);
 
       expect(result.jsonBody.details.durationMs).toBeGreaterThanOrEqual(0);
+      expect(result.jsonBody.details.weekStartDate).toMatch(/^\d{4}-\d{2}-\d{2}$/);
     });
   });
 
@@ -243,8 +274,10 @@ describe("manualTriggers", () => {
       },
     } as unknown as HttpRequest);
 
-    it("should return 200 with success message when no configs exist", async () => {
-      mockContentIngestion.findMany.mockResolvedValue([]);
+    it("should return 200 with helpful message when no configs exist", async () => {
+      mockContentIngestion.findMany
+        .mockResolvedValueOnce([]) // First call for active configs
+        .mockResolvedValueOnce([]); // Second call for all configs
 
       const request = createMockRequest();
       const result = await capturedHandlers.triggerDataIngestion.handler(request, mockContext);
@@ -252,6 +285,7 @@ describe("manualTriggers", () => {
       expect(result.status).toBe(200);
       expect(result.jsonBody.success).toBe(true);
       expect(result.jsonBody.details.configurationsProcessed).toBe(0);
+      expect(result.jsonBody.message).toContain("No ingestion configurations found");
     });
 
     it("should process market_data ingestion config", async () => {
@@ -280,6 +314,8 @@ describe("manualTriggers", () => {
       expect(result.jsonBody.details.configurationsProcessed).toBe(1);
       expect(result.jsonBody.details.dataPointsIngested).toBe(100);
       expect(result.jsonBody.details.itemsIndexed).toBe(100);
+      expect(result.jsonBody.details.configurations).toHaveLength(1);
+      expect(result.jsonBody.details.configurations[0].status).toBe("completed");
       expect(ingestMarketData).toHaveBeenCalledWith("tenant-1");
     });
 
@@ -313,11 +349,12 @@ describe("manualTriggers", () => {
       expect(result.status).toBe(200);
       expect(result.jsonBody.success).toBe(true);
       expect(result.jsonBody.details.dataPointsIngested).toBe(50);
+      expect(result.jsonBody.details.configurations[0].result).toContain("Created 50 items");
       expect(ingestRSSFeed).toHaveBeenCalled();
     });
 
     it("should filter by sourceType when provided", async () => {
-      mockContentIngestion.findMany.mockResolvedValue([]);
+      mockContentIngestion.findMany.mockResolvedValueOnce([]).mockResolvedValueOnce([]);
 
       const request = createMockRequest({ sourceType: "market_data" });
       await capturedHandlers.triggerDataIngestion.handler(request, mockContext);
@@ -330,7 +367,7 @@ describe("manualTriggers", () => {
     });
 
     it("should filter by configId when provided", async () => {
-      mockContentIngestion.findMany.mockResolvedValue([]);
+      mockContentIngestion.findMany.mockResolvedValueOnce([]).mockResolvedValueOnce([]);
 
       const request = createMockRequest({ configId: "specific-config" });
       await capturedHandlers.triggerDataIngestion.handler(request, mockContext);
@@ -354,7 +391,7 @@ describe("manualTriggers", () => {
       (ingestMarketData as jest.Mock).mockRejectedValue(new Error("Ingestion failed"));
 
       const request = createMockRequest();
-      await capturedHandlers.triggerDataIngestion.handler(request, mockContext);
+      const result = await capturedHandlers.triggerDataIngestion.handler(request, mockContext);
 
       expect(mockContentIngestion.update).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -362,6 +399,7 @@ describe("manualTriggers", () => {
           data: { status: "error" },
         })
       );
+      expect(result.jsonBody.details.configurations[0].status).toBe("error");
     });
 
     it("should return 500 on database error", async () => {

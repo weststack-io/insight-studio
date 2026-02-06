@@ -37,6 +37,7 @@ function getPrismaClient(): PrismaClient {
  * Optional query params:
  *   - userId: Generate briefing for specific user only
  *   - tenantId: Generate briefings for specific tenant only
+ *   - force: Set to "true" to regenerate even if briefings exist for this week
  */
 async function triggerBriefings(
   request: HttpRequest,
@@ -51,8 +52,12 @@ async function triggerBriefings(
     details: {
       usersProcessed: number;
       briefingsGenerated: number;
+      briefingsSkipped: number;
+      usersWithoutTenant: number;
       errors: string[];
       durationMs: number;
+      weekStartDate: string;
+      forceRegenerate: boolean;
     };
   } = {
     success: false,
@@ -60,8 +65,12 @@ async function triggerBriefings(
     details: {
       usersProcessed: 0,
       briefingsGenerated: 0,
+      briefingsSkipped: 0,
+      usersWithoutTenant: 0,
       errors: [],
       durationMs: 0,
+      weekStartDate: "",
+      forceRegenerate: false,
     },
   };
 
@@ -71,6 +80,9 @@ async function triggerBriefings(
     // Parse optional filters from query params
     const userId = request.query.get("userId");
     const tenantId = request.query.get("tenantId");
+    const forceRegenerate = request.query.get("force") === "true";
+
+    results.details.forceRegenerate = forceRegenerate;
 
     // Build query filter
     const whereClause: any = {};
@@ -90,7 +102,7 @@ async function triggerBriefings(
       },
     });
 
-    context.log(`Found ${users.length} users to process`);
+    context.log(`Found ${users.length} users to process (force=${forceRegenerate})`);
 
     // Calculate week start date (Monday of current week)
     const now = new Date();
@@ -99,49 +111,71 @@ async function triggerBriefings(
     const weekStartDate = new Date(now.setDate(diff));
     weekStartDate.setHours(0, 0, 0, 0);
 
-    // Check existing briefings
-    const existingBriefings = await db.briefing.findMany({
-      where: { weekStartDate },
-      select: { userId: true, type: true },
-    });
+    results.details.weekStartDate = weekStartDate.toISOString().split('T')[0];
 
-    const existingKeys = new Set(
-      existingBriefings.map((b) => `${b.userId}-${b.type}`)
-    );
+    // Check existing briefings (unless force regenerate)
+    let existingKeys = new Set<string>();
+    if (!forceRegenerate) {
+      const existingBriefings = await db.briefing.findMany({
+        where: { weekStartDate },
+        select: { userId: true, type: true },
+      });
+      existingKeys = new Set(
+        existingBriefings.map((b) => `${b.userId}-${b.type}`)
+      );
+      context.log(`Found ${existingBriefings.length} existing briefings for this week`);
+    }
 
     let briefingsGenerated = 0;
+    let briefingsSkipped = 0;
 
     // Process users
     for (const user of users) {
       try {
-        if (user.tenantId) {
-          const marketKey = `${user.id}-market`;
-          if (!existingKeys.has(marketKey)) {
-            const marketBriefing = await generateBriefing({
-              type: "market",
-              language: user.language as any,
-              generation: user.generation as any,
-              sophisticationLevel: user.sophisticationLevel as any,
-              userPreferences: user.userPreferences.map((p) => p.topic),
-            });
+        if (!user.tenantId) {
+          results.details.usersWithoutTenant++;
+          context.log(`Skipped user ${user.id} - no tenant assigned`);
+          continue;
+        }
 
-            await db.briefing.create({
-              data: {
+        const marketKey = `${user.id}-market`;
+        if (!forceRegenerate && existingKeys.has(marketKey)) {
+          briefingsSkipped++;
+          context.log(
+            `Skipped user ${user.id} - briefing already exists for this week (use force=true to regenerate)`
+          );
+        } else {
+          // If force regenerate, delete existing briefing first
+          if (forceRegenerate) {
+            await db.briefing.deleteMany({
+              where: {
                 userId: user.id,
-                tenantId: user.tenantId,
                 type: "market",
-                content: JSON.stringify(marketBriefing),
                 weekStartDate,
               },
             });
-
-            briefingsGenerated++;
-            context.log(`Generated market briefing for user ${user.id}`);
-          } else {
-            context.log(
-              `Skipped user ${user.id} - briefing already exists for this week`
-            );
           }
+
+          const marketBriefing = await generateBriefing({
+            type: "market",
+            language: user.language as any,
+            generation: user.generation as any,
+            sophisticationLevel: user.sophisticationLevel as any,
+            userPreferences: user.userPreferences.map((p) => p.topic),
+          });
+
+          await db.briefing.create({
+            data: {
+              userId: user.id,
+              tenantId: user.tenantId,
+              type: "market",
+              content: JSON.stringify(marketBriefing),
+              weekStartDate,
+            },
+          });
+
+          briefingsGenerated++;
+          context.log(`Generated market briefing for user ${user.id}`);
         }
         results.details.usersProcessed++;
       } catch (error) {
@@ -152,9 +186,15 @@ async function triggerBriefings(
     }
 
     results.details.briefingsGenerated = briefingsGenerated;
+    results.details.briefingsSkipped = briefingsSkipped;
     results.details.durationMs = Date.now() - startTime;
     results.success = true;
-    results.message = `Briefings generation completed. Generated ${briefingsGenerated} briefings for ${results.details.usersProcessed} users.`;
+
+    if (briefingsGenerated === 0 && briefingsSkipped > 0) {
+      results.message = `No new briefings generated. ${briefingsSkipped} users already have briefings for week of ${results.details.weekStartDate}. Use force=true to regenerate.`;
+    } else {
+      results.message = `Briefings generation completed. Generated ${briefingsGenerated} new briefings, skipped ${briefingsSkipped} existing.`;
+    }
 
     context.log(results.message);
 
@@ -196,9 +236,16 @@ async function triggerDataIngestion(
     success: boolean;
     message: string;
     details: {
+      configurationsFound: number;
       configurationsProcessed: number;
       dataPointsIngested: number;
       itemsIndexed: number;
+      configurations: Array<{
+        id: string;
+        sourceType: string;
+        status: string;
+        result: string;
+      }>;
       errors: string[];
       durationMs: number;
     };
@@ -206,9 +253,11 @@ async function triggerDataIngestion(
     success: false,
     message: "",
     details: {
+      configurationsFound: 0,
       configurationsProcessed: 0,
       dataPointsIngested: 0,
       itemsIndexed: 0,
+      configurations: [],
       errors: [],
       durationMs: 0,
     },
@@ -237,11 +286,39 @@ async function triggerDataIngestion(
       where: whereClause,
     });
 
+    results.details.configurationsFound = ingestionConfigs.length;
     context.log(
       `Found ${ingestionConfigs.length} active ingestion configurations`
     );
 
+    if (ingestionConfigs.length === 0) {
+      // Check if there are ANY configs (including inactive)
+      const allConfigs = await db.contentIngestion.findMany({
+        select: { id: true, sourceType: true, status: true },
+      });
+
+      if (allConfigs.length === 0) {
+        results.message = "No ingestion configurations found in database. Create configurations via the admin UI or API first.";
+      } else {
+        const activeCount = allConfigs.filter(c => c.status === "active").length;
+        results.message = `No matching active configurations. Found ${allConfigs.length} total configs (${activeCount} active). Check sourceType filter or config status.`;
+        results.details.errors.push(
+          `Available configs: ${allConfigs.map(c => `${c.sourceType}:${c.status}`).join(", ")}`
+        );
+      }
+      results.success = true;
+      results.details.durationMs = Date.now() - startTime;
+      return { status: 200, jsonBody: results };
+    }
+
     for (const config of ingestionConfigs) {
+      const configResult = {
+        id: config.id,
+        sourceType: config.sourceType,
+        status: "pending",
+        result: "",
+      };
+
       try {
         context.log(
           `Processing ingestion: ${config.sourceType} (ID: ${config.id})`
@@ -264,6 +341,9 @@ async function triggerDataIngestion(
               if (indexResult.errors?.length) {
                 results.details.errors.push(...indexResult.errors);
               }
+              configResult.result = `Ingested ${marketResult.dataPoints} data points, indexed ${indexResult.indexed}`;
+            } else {
+              configResult.result = marketResult.errors?.join("; ") || "No data points ingested";
             }
 
             if (marketResult.errors?.length) {
@@ -293,6 +373,9 @@ async function triggerDataIngestion(
               if (indexResult.errors?.length) {
                 results.details.errors.push(...indexResult.errors);
               }
+              configResult.result = `Created ${rssResult.itemsCreated} items, indexed ${indexResult.indexed}`;
+            } else {
+              configResult.result = rssResult.errors?.join("; ") || "No new items from feed";
             }
 
             if (rssResult.errors?.length) {
@@ -302,9 +385,10 @@ async function triggerDataIngestion(
 
           default:
             context.log(`Unknown source type: ${config.sourceType}`);
-            results.details.errors.push(
-              `Unknown source type: ${config.sourceType}`
-            );
+            configResult.status = "error";
+            configResult.result = `Unknown source type: ${config.sourceType}`;
+            results.details.errors.push(configResult.result);
+            results.details.configurations.push(configResult);
             continue;
         }
 
@@ -317,6 +401,7 @@ async function triggerDataIngestion(
           },
         });
 
+        configResult.status = "completed";
         results.details.configurationsProcessed++;
         context.log(
           `Completed ingestion: ${config.sourceType} (ID: ${config.id})`
@@ -324,6 +409,8 @@ async function triggerDataIngestion(
       } catch (error) {
         const errorMsg = `Failed to process ingestion ${config.id}: ${error instanceof Error ? error.message : String(error)}`;
         context.log(`Error: ${errorMsg}`);
+        configResult.status = "error";
+        configResult.result = error instanceof Error ? error.message : String(error);
         results.details.errors.push(errorMsg);
 
         // Mark as error
@@ -332,11 +419,13 @@ async function triggerDataIngestion(
           data: { status: "error" },
         });
       }
+
+      results.details.configurations.push(configResult);
     }
 
     results.details.durationMs = Date.now() - startTime;
     results.success = true;
-    results.message = `Data ingestion completed. Processed ${results.details.configurationsProcessed} configurations, ingested ${results.details.dataPointsIngested} items, indexed ${results.details.itemsIndexed} items.`;
+    results.message = `Data ingestion completed. Processed ${results.details.configurationsProcessed}/${results.details.configurationsFound} configurations, ingested ${results.details.dataPointsIngested} items, indexed ${results.details.itemsIndexed} items.`;
 
     context.log(results.message);
 
