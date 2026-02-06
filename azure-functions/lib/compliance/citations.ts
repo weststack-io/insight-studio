@@ -61,11 +61,13 @@ export async function extractCitations(
     const confidenceScore = Math.min(result.score / 4, 1);
 
     // Extract source information from metadata
+    // Field mapping: Azure Search index uses Name, DocumentDate, FirmName, DocType
     const metadata = result.metadata || {};
-    const sourceTitle = metadata.Title || metadata.title || metadata.source || "Unknown Source";
+    const sourceTitle = metadata.Name || metadata.Title || metadata.title || metadata.source || "Unknown Source";
     const sourceUrl = metadata.url || metadata.sourceUrl || metadata.DocumentUrl;
-    const sourceType = metadata.Type || metadata.type || "document";
-    const sourceDate = metadata.MeetingDate || metadata.date || metadata.Date;
+    const sourceType = metadata.DocType || metadata.Type || metadata.type || "document";
+    const sourceDate = metadata.DocumentDate || metadata.MeetingDate || metadata.date || metadata.Date;
+    const firmName = metadata.FirmName;
 
     // Find or create content source
     let sourceId: string | undefined;
@@ -321,9 +323,11 @@ export function formatSourcesForPrompt(searchResults: SearchResult[]): string {
   const lines: string[] = ["Proprietary Insights (cite these sources using [Source: Title]):"];
 
   for (const result of searchResults) {
+    // Field mapping: Azure Search index uses Name, DocumentDate, FirmName, DocType
     const metadata = result.metadata || {};
-    const title = metadata.Title || metadata.title || "Unknown Document";
-    const date = metadata.MeetingDate || metadata.date;
+    const title = metadata.Name || metadata.Title || metadata.title || "Unknown Document";
+    const firmName = metadata.FirmName;
+    const date = metadata.DocumentDate || metadata.MeetingDate || metadata.date;
     const dateStr = date
       ? new Date(date).toLocaleDateString("en-US", {
           month: "short",
@@ -332,7 +336,8 @@ export function formatSourcesForPrompt(searchResults: SearchResult[]): string {
         })
       : "";
 
-    lines.push(`\nFrom "${title}"${dateStr ? ` (${dateStr})` : ""}:`);
+    const sourceLabel = firmName ? `${title} - ${firmName}` : title;
+    lines.push(`\nFrom "${sourceLabel}"${dateStr ? ` (${dateStr})` : ""}:`);
     lines.push(result.content.substring(0, 500));
   }
 

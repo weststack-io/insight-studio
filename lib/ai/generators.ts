@@ -87,17 +87,18 @@ export async function generateBriefing(
           ? "weekly market trends economic conditions"
           : "portfolio performance investment strategies";
 
-      // Calculate date range: from 2 weeks ago to now (covering most recent week or couple of weeks)
+      // Calculate date range: from 2 years ago to now (broad range to capture historical documents)
       const now = new Date();
-      const twoWeeksAgo = new Date(now);
-      twoWeeksAgo.setDate(twoWeeksAgo.getDate() - 14);
+      const twoYearsAgo = new Date(now);
+      twoYearsAgo.setFullYear(twoYearsAgo.getFullYear() - 2);
 
       // Format dates in ISO 8601 format for Azure Search filter
-      const startDate = twoWeeksAgo.toISOString();
+      const startDate = twoYearsAgo.toISOString();
       const endDate = now.toISOString();
 
       // Build filter string in Azure Search OData format
-      const dateFilter = `MeetingDate gt '${startDate}' and MeetingDate lt '${endDate}'`;
+      // Field mapping: Azure Search index uses DocumentDate (not MeetingDate)
+      const dateFilter = `DocumentDate gt '${startDate}' and DocumentDate lt '${endDate}'`;
 
       const searchResults = await searchVector(searchQuery, {
         top: 3,

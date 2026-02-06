@@ -67,14 +67,17 @@ export interface GeneratedLesson {
 
 /**
  * Extract source info from search results for prompt
+ * Field mapping: Azure Search index uses Name, DocumentDate, FirmName, DocType
  */
 function extractSourceInfo(searchResults: SearchResult[]): SourceInfo[] {
   return searchResults.map((result) => {
     const metadata = result.metadata || {};
+    const name = metadata.Name || metadata.Title || metadata.title || "Unknown Document";
+    const firmName = metadata.FirmName;
     return {
-      title: metadata.Title || metadata.title || "Unknown Document",
-      date: metadata.MeetingDate || metadata.date,
-      type: metadata.Type || metadata.type || "document",
+      title: firmName ? `${name} - ${firmName}` : name,
+      date: metadata.DocumentDate || metadata.MeetingDate || metadata.date,
+      type: metadata.DocType || metadata.Type || metadata.type || "document",
     };
   });
 }
@@ -149,17 +152,18 @@ export async function generateBriefing(
           ? "weekly market trends economic conditions outlook"
           : "portfolio performance investment strategies allocation";
 
-      // Calculate date range: from 4 weeks ago to now
+      // Calculate date range: from 2 years ago to now (broad range to capture historical documents)
       const now = new Date();
-      const fourWeeksAgo = new Date(now);
-      fourWeeksAgo.setDate(fourWeeksAgo.getDate() - 28);
+      const twoYearsAgo = new Date(now);
+      twoYearsAgo.setFullYear(twoYearsAgo.getFullYear() - 2);
 
       // Format dates in ISO 8601 format for Azure Search filter
-      const startDate = fourWeeksAgo.toISOString();
+      const startDate = twoYearsAgo.toISOString();
       const endDate = now.toISOString();
 
       // Build filter string in Azure Search OData format
-      const dateFilter = `MeetingDate gt '${startDate}' and MeetingDate lt '${endDate}'`;
+      // Field mapping: Azure Search index uses DocumentDate (not MeetingDate)
+      const dateFilter = `DocumentDate gt '${startDate}' and DocumentDate lt '${endDate}'`;
 
       searchResults = await searchVector(searchQuery, {
         top: 5,

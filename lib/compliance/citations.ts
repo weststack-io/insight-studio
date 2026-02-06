@@ -46,10 +46,11 @@ export async function extractCitations(
     const confidenceScore = Math.min(result.score / 4, 1);
 
     // Extract source information from metadata
+    // Field mapping: Azure Search index uses Name, DocumentDate, FirmName, DocType
     const metadata = result.metadata || {};
-    const sourceTitle = metadata.title || metadata.source || "Unknown Source";
+    const sourceTitle = metadata.Name || metadata.title || metadata.source || "Unknown Source";
     const sourceUrl = metadata.url || metadata.sourceUrl;
-    const sourceType = metadata.type || "document";
+    const sourceType = metadata.DocType || metadata.type || "document";
 
     // Find or create content source
     let sourceId: string | undefined;
