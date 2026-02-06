@@ -830,6 +830,9 @@ Response:
 # Trigger for all users
 curl -X POST "https://<function-app-name>.azurewebsites.net/api/trigger/briefings?code=<function-key>"
 
+# Force regenerate briefings (even if they exist for this week)
+curl -X POST "https://<function-app-name>.azurewebsites.net/api/trigger/briefings?code=<function-key>&force=true"
+
 # Trigger for specific user
 curl -X POST "https://<function-app-name>.azurewebsites.net/api/trigger/briefings?code=<function-key>&userId=<user-id>"
 
@@ -837,16 +840,38 @@ curl -X POST "https://<function-app-name>.azurewebsites.net/api/trigger/briefing
 curl -X POST "https://<function-app-name>.azurewebsites.net/api/trigger/briefings?code=<function-key>&tenantId=<tenant-id>"
 ```
 
-Response:
+Response (when briefings already exist):
 ```json
 {
   "success": true,
-  "message": "Briefings generation completed. Generated 5 briefings for 5 users.",
+  "message": "No new briefings generated. 2 users already have briefings for week of 2026-02-02. Use force=true to regenerate.",
   "details": {
-    "usersProcessed": 5,
-    "briefingsGenerated": 5,
+    "usersProcessed": 2,
+    "briefingsGenerated": 0,
+    "briefingsSkipped": 2,
+    "usersWithoutTenant": 0,
     "errors": [],
-    "durationMs": 1234
+    "durationMs": 415,
+    "weekStartDate": "2026-02-02",
+    "forceRegenerate": false
+  }
+}
+```
+
+Response (with force=true):
+```json
+{
+  "success": true,
+  "message": "Briefings generation completed. Generated 2 new briefings, skipped 0 existing.",
+  "details": {
+    "usersProcessed": 2,
+    "briefingsGenerated": 2,
+    "briefingsSkipped": 0,
+    "usersWithoutTenant": 0,
+    "errors": [],
+    "durationMs": 37664,
+    "weekStartDate": "2026-02-02",
+    "forceRegenerate": true
   }
 }
 ```
@@ -887,6 +912,7 @@ Response:
 |-----------|------|-------------|
 | `userId` | string | Generate briefing for specific user only |
 | `tenantId` | string | Generate briefings for specific tenant only |
+| `force` | boolean | Set to `true` to regenerate briefings even if they exist for this week |
 
 **Ingestion Trigger (`/api/trigger/ingestion`):**
 
