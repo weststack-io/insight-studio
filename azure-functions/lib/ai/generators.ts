@@ -152,17 +152,18 @@ export async function generateBriefing(
           ? "weekly market trends economic conditions outlook"
           : "portfolio performance investment strategies allocation";
 
-      // Calculate date range: last month of data relative to today
+      // Calculate date range: last 3 months of data relative to today
+      // Using 3 months to ensure we capture quarterly reports (Q4 reports from Dec)
       const now = new Date();
-      const oneMonthAgo = new Date(now);
-      oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
+      const threeMonthsAgo = new Date(now);
+      threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
 
       // Format dates in ISO 8601 format for Azure Search filter
-      const startDate = oneMonthAgo.toISOString();
+      const startDate = threeMonthsAgo.toISOString();
       const endDate = now.toISOString();
 
       // Build filter string in Azure Search OData format
-      // - Filter by date range (last month)
+      // - Filter by date range (last 3 months)
       // - Filter by DocType for 'Fund: Manager Letter' only
       const dateFilter = `DocumentDate ge '${startDate}' and DocumentDate le '${endDate}' and DocType eq 'Fund: Manager Letter'`;
 
