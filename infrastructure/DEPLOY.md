@@ -775,6 +775,126 @@ After the infrastructure is deployed, you need to deploy the Function App code:
    - **Option C**: Azure will compile TypeScript remotely. All TypeScript source files (including `lib/**/*.ts`) must be included in the deployment package. The root-level `.funcignore` has been configured to allow TypeScript files. Azure will need a `tsconfig.json` that can compile the entire project structure.
    - The function code imports from `../../lib/ai/generators`, so the compiled `lib/` files must be available at runtime for the relative imports to resolve correctly.
 
+## Function App Endpoints
+
+The Function App provides both scheduled (timer-triggered) and manual (HTTP-triggered) functions.
+
+### Scheduled Functions
+
+| Function | Schedule | Description |
+|----------|----------|-------------|
+| `weeklyBriefingsGenerator` | Every Monday at 9 AM UTC | Generates weekly market briefings for all users |
+| `dataIngestionScheduler` | Every 6 hours | Runs data ingestion for active configurations |
+
+### Manual Trigger Endpoints (for Demos)
+
+These HTTP endpoints allow manual triggering of the scheduled functions for demo and testing purposes.
+
+| Endpoint | Method | Auth | Description |
+|----------|--------|------|-------------|
+| `/api/trigger/briefings` | POST | Function key | Manually trigger briefings generation |
+| `/api/trigger/ingestion` | POST | Function key | Manually trigger data ingestion |
+| `/api/health` | GET | Anonymous | Health check endpoint |
+
+#### Getting the Function Key
+
+```bash
+# Get the default function key
+az functionapp keys list \
+  --name <function-app-name> \
+  --resource-group <resource-group> \
+  --query "functionKeys.default" -o tsv
+```
+
+#### Usage Examples
+
+**Health Check (no authentication required):**
+
+```bash
+curl https://<function-app-name>.azurewebsites.net/api/health
+```
+
+Response:
+```json
+{
+  "status": "healthy",
+  "timestamp": "2026-02-06T00:00:00.000Z",
+  "database": "connected",
+  "tenants": 2
+}
+```
+
+**Trigger Briefings Generation:**
+
+```bash
+# Trigger for all users
+curl -X POST "https://<function-app-name>.azurewebsites.net/api/trigger/briefings?code=<function-key>"
+
+# Trigger for specific user
+curl -X POST "https://<function-app-name>.azurewebsites.net/api/trigger/briefings?code=<function-key>&userId=<user-id>"
+
+# Trigger for specific tenant
+curl -X POST "https://<function-app-name>.azurewebsites.net/api/trigger/briefings?code=<function-key>&tenantId=<tenant-id>"
+```
+
+Response:
+```json
+{
+  "success": true,
+  "message": "Briefings generation completed. Generated 5 briefings for 5 users.",
+  "details": {
+    "usersProcessed": 5,
+    "briefingsGenerated": 5,
+    "errors": [],
+    "durationMs": 1234
+  }
+}
+```
+
+**Trigger Data Ingestion:**
+
+```bash
+# Trigger all active ingestion configs
+curl -X POST "https://<function-app-name>.azurewebsites.net/api/trigger/ingestion?code=<function-key>"
+
+# Trigger specific source type only
+curl -X POST "https://<function-app-name>.azurewebsites.net/api/trigger/ingestion?code=<function-key>&sourceType=market_data"
+
+# Trigger specific config
+curl -X POST "https://<function-app-name>.azurewebsites.net/api/trigger/ingestion?code=<function-key>&configId=<config-id>"
+```
+
+Response:
+```json
+{
+  "success": true,
+  "message": "Data ingestion completed. Processed 2 configurations, ingested 150 items, indexed 150 items.",
+  "details": {
+    "configurationsProcessed": 2,
+    "dataPointsIngested": 150,
+    "itemsIndexed": 150,
+    "errors": [],
+    "durationMs": 5678
+  }
+}
+```
+
+#### Query Parameters
+
+**Briefings Trigger (`/api/trigger/briefings`):**
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `userId` | string | Generate briefing for specific user only |
+| `tenantId` | string | Generate briefings for specific tenant only |
+
+**Ingestion Trigger (`/api/trigger/ingestion`):**
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `sourceType` | string | Filter by source type (`market_data`, `rss`) |
+| `configId` | string | Run specific ingestion configuration only |
+
 ## Deploying the Next.js Application to App Service
 
 After the App Service infrastructure is deployed, you need to deploy your Next.js application code:
