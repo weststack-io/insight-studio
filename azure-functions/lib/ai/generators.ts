@@ -1,5 +1,5 @@
 import { generateText } from "../azure/openai";
-import { searchVector } from "../azure/search";
+import { searchVector, SearchResult } from "../azure/search";
 import {
   getBriefingPrompt,
   getExplainerPrompt,
@@ -7,6 +7,7 @@ import {
   BriefingContext,
   ExplainerContext,
   LessonContext,
+  SourceInfo,
 } from "./prompts";
 import {
   BriefingType,
@@ -14,6 +15,16 @@ import {
   Language,
   SophisticationLevel,
 } from "../types";
+import {
+  getLatestMarketData,
+  formatMarketDataForPrompt,
+} from "../ingestion/market-data";
+import {
+  formatSourcesForPrompt,
+  extractCitations,
+  storeCitations,
+  updateBriefingCitations,
+} from "../compliance/citations";
 
 export interface GeneratedBriefing {
   title: string;
@@ -24,6 +35,11 @@ export interface GeneratedBriefing {
   }>;
   keyTakeaways: string[];
   nextSteps: string[];
+  sources?: Array<{
+    title: string;
+    date?: string;
+    type: string;
+  }>;
 }
 
 export interface GeneratedExplainer {
@@ -32,6 +48,10 @@ export interface GeneratedExplainer {
   content: string;
   keyPoints: string[];
   relatedTopics: string[];
+  sources?: Array<{
+    title: string;
+    type: string;
+  }>;
 }
 
 export interface GeneratedLesson {
@@ -39,14 +59,39 @@ export interface GeneratedLesson {
   content: string;
   keyTakeaways: string[];
   estimatedReadTime: string;
+  sources?: Array<{
+    title: string;
+    type: string;
+  }>;
+}
+
+/**
+ * Extract source info from search results for prompt
+ */
+function extractSourceInfo(searchResults: SearchResult[]): SourceInfo[] {
+  return searchResults.map((result) => {
+    const metadata = result.metadata || {};
+    return {
+      title: metadata.Title || metadata.title || "Unknown Document",
+      date: metadata.MeetingDate || metadata.date,
+      type: metadata.Type || metadata.type || "document",
+    };
+  });
 }
 
 /**
  * Generate a weekly briefing (market or portfolio)
+ * Integrates Azure Search (proprietary insights) and Alpha Vantage (market data)
  */
 export async function generateBriefing(
-  context: BriefingContext
+  context: BriefingContext,
+  options?: {
+    briefingId?: string;
+    tenantId?: string;
+  }
 ): Promise<GeneratedBriefing> {
+  const { briefingId, tenantId } = options || {};
+
   // Log portfolio data usage
   if (context.portfolioData) {
     console.log(
@@ -78,76 +123,135 @@ export async function generateBriefing(
     );
   }
 
-  // Use provided market context, or search for relevant market context if needed
-  let marketContext = context.marketContext || "";
-  if (!marketContext && (context.type === "market" || !context.marketContext)) {
+  // 1. Fetch current market data from Alpha Vantage (via database)
+  let currentMarketData = context.currentMarketData || "";
+  if (!currentMarketData) {
+    try {
+      const marketData = await getLatestMarketData(tenantId);
+      if (marketData.length > 0) {
+        currentMarketData = formatMarketDataForPrompt(marketData);
+        console.log(`[Generators] Loaded ${marketData.length} market data points`);
+      }
+    } catch (error) {
+      console.error("Failed to fetch market data:", error);
+    }
+  }
+
+  // 2. Search Azure AI Search for proprietary insights
+  let proprietaryInsights = context.proprietaryInsights || context.marketContext || "";
+  let searchResults: SearchResult[] = [];
+  let sources: SourceInfo[] = context.sources || [];
+
+  if (!proprietaryInsights) {
     try {
       const searchQuery =
         context.type === "market"
-          ? "weekly market trends economic conditions"
-          : "portfolio performance investment strategies";
+          ? "weekly market trends economic conditions outlook"
+          : "portfolio performance investment strategies allocation";
 
-      // Calculate date range: from 2 weeks ago to now (covering most recent week or couple of weeks)
+      // Calculate date range: from 4 weeks ago to now
       const now = new Date();
-      const twoWeeksAgo = new Date(now);
-      twoWeeksAgo.setDate(twoWeeksAgo.getDate() - 14);
+      const fourWeeksAgo = new Date(now);
+      fourWeeksAgo.setDate(fourWeeksAgo.getDate() - 28);
 
       // Format dates in ISO 8601 format for Azure Search filter
-      const startDate = twoWeeksAgo.toISOString();
+      const startDate = fourWeeksAgo.toISOString();
       const endDate = now.toISOString();
 
       // Build filter string in Azure Search OData format
       const dateFilter = `MeetingDate gt '${startDate}' and MeetingDate lt '${endDate}'`;
 
-      const searchResults = await searchVector(searchQuery, {
-        top: 3,
+      searchResults = await searchVector(searchQuery, {
+        top: 5,
         filter: dateFilter,
+        tenantId,
       });
-      marketContext = searchResults.map((r) => r.content).join("\n\n");
+
+      if (searchResults.length > 0) {
+        // Format with source attribution
+        proprietaryInsights = formatSourcesForPrompt(searchResults);
+        sources = extractSourceInfo(searchResults);
+        console.log(`[Generators] Found ${searchResults.length} proprietary sources`);
+      }
     } catch (error) {
-      console.error("Failed to search for market context:", error);
+      console.error("Failed to search for proprietary insights:", error);
     }
   }
 
+  // 3. Build the prompt with all context
   const prompt = getBriefingPrompt({
     ...context,
-    marketContext,
+    proprietaryInsights,
+    currentMarketData,
+    sources,
   });
 
+  // 4. Generate the briefing
   const deploymentName = process.env.AZURE_OPENAI_DEPLOYMENT_NAME || "gpt-4";
   const response = await generateText(deploymentName, prompt, {
     temperature: 0.7,
-    maxTokens: 2000,
+    maxTokens: 2500,
   });
 
+  // 5. Parse the response
+  let parsed: GeneratedBriefing;
   try {
-    const parsed = JSON.parse(response) as GeneratedBriefing;
-    return parsed;
+    parsed = JSON.parse(response) as GeneratedBriefing;
   } catch (error) {
     // If JSON parsing fails, try to extract JSON from markdown code blocks
     const jsonMatch =
       response.match(/```json\n([\s\S]*?)\n```/) ||
       response.match(/```\n([\s\S]*?)\n```/);
     if (jsonMatch) {
-      return JSON.parse(jsonMatch[1]) as GeneratedBriefing;
+      parsed = JSON.parse(jsonMatch[1]) as GeneratedBriefing;
+    } else {
+      // Fallback: create a structured response from plain text
+      console.warn("[Generators] Failed to parse JSON response, using fallback");
+      parsed = {
+        title: `${
+          context.type.charAt(0).toUpperCase() + context.type.slice(1)
+        } Briefing`,
+        summary: response.substring(0, 200),
+        sections: [
+          {
+            heading: "Overview",
+            content: response,
+          },
+        ],
+        keyTakeaways: [],
+        nextSteps: [],
+        sources: sources.map((s) => ({
+          title: s.title,
+          date: s.date,
+          type: s.type,
+        })),
+      };
     }
-
-    // Fallback: create a structured response from plain text
-    return {
-      title: `${
-        context.type.charAt(0).toUpperCase() + context.type.slice(1)
-      } Briefing`,
-      summary: response.substring(0, 200),
-      sections: [
-        {
-          heading: "Overview",
-          content: response,
-        },
-      ],
-      keyTakeaways: [],
-      nextSteps: [],
-    };
   }
+
+  // 6. Extract and store citations if we have a briefingId
+  if (briefingId && tenantId && searchResults.length > 0) {
+    try {
+      const fullContent = parsed.sections.map((s) => s.content).join("\n");
+      const citations = await extractCitations(
+        fullContent,
+        searchResults,
+        briefingId,
+        "briefing",
+        tenantId
+      );
+
+      if (citations.length > 0) {
+        await storeCitations(citations);
+        await updateBriefingCitations(briefingId, citations);
+        console.log(`[Generators] Stored ${citations.length} citations for briefing`);
+      }
+    } catch (error) {
+      console.error("Failed to store citations:", error);
+    }
+  }
+
+  return parsed;
 }
 
 /**
@@ -157,17 +261,25 @@ export async function generateExplainer(
   context: ExplainerContext
 ): Promise<GeneratedExplainer> {
   // Search for relevant context about the topic
-  let searchContext = "";
-  try {
-    const searchResults = await searchVector(context.topic, { top: 5 });
-    searchContext = searchResults.map((r) => r.content).join("\n\n");
-  } catch (error) {
-    console.error("Failed to search for explainer context:", error);
+  let searchContext = context.searchContext || "";
+  let sources: SourceInfo[] = context.sources || [];
+
+  if (!searchContext) {
+    try {
+      const searchResults = await searchVector(context.topic, { top: 5 });
+      if (searchResults.length > 0) {
+        searchContext = formatSourcesForPrompt(searchResults);
+        sources = extractSourceInfo(searchResults);
+      }
+    } catch (error) {
+      console.error("Failed to search for explainer context:", error);
+    }
   }
 
   const prompt = getExplainerPrompt({
     ...context,
-    searchContext: searchContext || context.searchContext,
+    searchContext,
+    sources,
   });
 
   const deploymentName = process.env.AZURE_OPENAI_DEPLOYMENT_NAME || "gpt-4";
@@ -194,6 +306,7 @@ export async function generateExplainer(
       content: response,
       keyPoints: [],
       relatedTopics: [],
+      sources: sources.map((s) => ({ title: s.title, type: s.type })),
     };
   }
 }
@@ -206,10 +319,15 @@ export async function generateLesson(
 ): Promise<GeneratedLesson> {
   // Search for relevant context if not provided
   let searchContext = context.searchContext || "";
+  let sources: SourceInfo[] = context.sources || [];
+
   if (!searchContext) {
     try {
       const searchResults = await searchVector(context.topic, { top: 3 });
-      searchContext = searchResults.map((r) => r.content).join("\n\n");
+      if (searchResults.length > 0) {
+        searchContext = formatSourcesForPrompt(searchResults);
+        sources = extractSourceInfo(searchResults);
+      }
     } catch (error) {
       console.error("Failed to search for lesson context:", error);
     }
@@ -218,6 +336,7 @@ export async function generateLesson(
   const prompt = getLessonPrompt({
     ...context,
     searchContext,
+    sources,
   });
 
   const deploymentName = process.env.AZURE_OPENAI_DEPLOYMENT_NAME || "gpt-4";
@@ -246,6 +365,7 @@ export async function generateLesson(
       content: response,
       keyTakeaways: [],
       estimatedReadTime: `${readTime} minute${readTime !== 1 ? "s" : ""}`,
+      sources: sources.map((s) => ({ title: s.title, type: s.type })),
     };
   }
 }

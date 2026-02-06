@@ -1,120 +1,178 @@
-import { PrismaClient } from "@prisma/client";
-import { createMssqlAdapter } from "@/lib/db/adapter";
-
-const prisma = new PrismaClient({
-  adapter: createMssqlAdapter(),
-});
+import { prisma } from "@/lib/db/client";
 
 export interface MarketDataPoint {
-  symbol?: string;
-  price?: number;
-  change?: number;
-  changePercent?: number;
+  symbol: string;
+  name: string;
+  price: number;
+  change: number;
+  changePercent: number;
   volume?: number;
+  previousClose?: number;
   timestamp: string;
-  [key: string]: any; // Allow additional fields
-}
-
-export interface AlphaMavenConfig {
-  apiKey: string;
-  baseUrl?: string;
-  symbols?: string[];
-  dataTypes?: string[];
+  type: "index" | "currency" | "volatility";
 }
 
 export interface MarketDataResult {
   success: boolean;
   dataPoints: number;
+  data?: MarketDataPoint[];
   errors?: string[];
 }
 
-/**
- * Fetch market data from Alpha Maven API
- */
-export async function fetchAlphaMavenData(
-  config: AlphaMavenConfig
-): Promise<MarketDataPoint[]> {
-  const baseUrl = config.baseUrl || "https://api.alphamaven.com/v1";
-  const apiKey = config.apiKey;
+export interface AlphaVantageConfig {
+  apiKey: string;
+  baseUrl: string;
+}
 
-  if (!apiKey) {
-    throw new Error("Alpha Maven API key is required");
+// Default symbols to fetch
+const INDEX_SYMBOLS = [
+  { symbol: "SPY", name: "S&P 500 ETF" },
+  { symbol: "QQQ", name: "NASDAQ 100 ETF" },
+  { symbol: "DIA", name: "Dow Jones ETF" },
+  { symbol: "IWM", name: "Russell 2000 ETF" },
+];
+
+const CURRENCY_PAIRS = [
+  { from: "EUR", to: "USD", name: "EUR/USD" },
+  { from: "GBP", to: "USD", name: "GBP/USD" },
+  { from: "USD", to: "JPY", name: "USD/JPY" },
+];
+
+/**
+ * Fetch stock quote from Alpha Vantage
+ */
+async function fetchStockQuote(
+  symbol: string,
+  config: AlphaVantageConfig
+): Promise<any> {
+  const url = `${config.baseUrl}/query?function=GLOBAL_QUOTE&symbol=${symbol}&apikey=${config.apiKey}`;
+
+  const response = await fetch(url, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error(`Alpha Vantage API error: ${response.statusText}`);
   }
 
+  const data = await response.json();
+
+  // Check for API errors
+  if (data["Error Message"]) {
+    throw new Error(data["Error Message"]);
+  }
+
+  if (data["Note"]) {
+    // Rate limit warning
+    console.warn(`Alpha Vantage rate limit warning: ${data["Note"]}`);
+  }
+
+  return data["Global Quote"];
+}
+
+/**
+ * Fetch currency exchange rate from Alpha Vantage
+ */
+async function fetchCurrencyRate(
+  fromCurrency: string,
+  toCurrency: string,
+  config: AlphaVantageConfig
+): Promise<any> {
+  const url = `${config.baseUrl}/query?function=CURRENCY_EXCHANGE_RATE&from_currency=${fromCurrency}&to_currency=${toCurrency}&apikey=${config.apiKey}`;
+
+  const response = await fetch(url, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error(`Alpha Vantage API error: ${response.statusText}`);
+  }
+
+  const data = await response.json();
+
+  // Check for API errors
+  if (data["Error Message"]) {
+    throw new Error(data["Error Message"]);
+  }
+
+  if (data["Note"]) {
+    console.warn(`Alpha Vantage rate limit warning: ${data["Note"]}`);
+  }
+
+  return data["Realtime Currency Exchange Rate"];
+}
+
+/**
+ * Fetch all market data from Alpha Vantage
+ */
+export async function fetchAlphaVantageData(
+  config: AlphaVantageConfig
+): Promise<MarketDataPoint[]> {
   const dataPoints: MarketDataPoint[] = [];
   const errors: string[] = [];
 
-  // Default symbols if not provided (major indices and currencies)
-  const symbols =
-    config.symbols || [
-      "SPY",
-      "QQQ",
-      "DIA",
-      "IWM",
-      "VIX",
-      "EURUSD",
-      "GBPUSD",
-      "USDJPY",
-    ];
+  // Fetch index ETFs
+  for (const index of INDEX_SYMBOLS) {
+    try {
+      const quote = await fetchStockQuote(index.symbol, config);
 
-  // Default data types if not provided
-  const dataTypes = config.dataTypes || ["quote", "price"];
-
-  try {
-    // Fetch data for each symbol
-    for (const symbol of symbols) {
-      try {
-        // Alpha Maven API endpoint structure (adjust based on actual API)
-        const response = await fetch(
-          `${baseUrl}/market/${symbol}?apikey=${apiKey}`,
-          {
-            method: "GET",
-            headers: {
-              "Content-Type": "application/json",
-            },
-          }
-        );
-
-        if (!response.ok) {
-          errors.push(
-            `Failed to fetch data for ${symbol}: ${response.statusText}`
-          );
-          continue;
-        }
-
-        const data = await response.json();
-
-        // Normalize the response based on Alpha Maven API structure
-        // Adjust this based on actual API response format
-        const normalizedData: MarketDataPoint = {
-          symbol,
-          price: data.price || data.close || data.last,
-          change: data.change || data.changeAmount,
-          changePercent: data.changePercent || data.changePct,
-          volume: data.volume || data.tradeVolume,
-          timestamp: data.timestamp || data.time || new Date().toISOString(),
-          ...data, // Include all additional fields
-        };
-
-        dataPoints.push(normalizedData);
-      } catch (error) {
-        errors.push(
-          `Error fetching data for ${symbol}: ${
-            error instanceof Error ? error.message : String(error)
-          }`
-        );
+      if (quote) {
+        dataPoints.push({
+          symbol: index.symbol,
+          name: index.name,
+          price: parseFloat(quote["05. price"]) || 0,
+          change: parseFloat(quote["09. change"]) || 0,
+          changePercent: parseFloat(quote["10. change percent"]?.replace("%", "")) || 0,
+          volume: parseInt(quote["06. volume"]) || undefined,
+          previousClose: parseFloat(quote["08. previous close"]) || undefined,
+          timestamp: quote["07. latest trading day"] || new Date().toISOString(),
+          type: "index",
+        });
       }
+
+      // Add delay to avoid rate limiting (5 calls/minute on free tier)
+      await delay(1500);
+    } catch (error) {
+      const msg = `Failed to fetch ${index.symbol}: ${error instanceof Error ? error.message : String(error)}`;
+      console.error(msg);
+      errors.push(msg);
     }
-  } catch (error) {
-    throw new Error(
-      `Failed to fetch Alpha Maven data: ${
-        error instanceof Error ? error.message : String(error)
-      }`
-    );
+  }
+
+  // Fetch currency pairs
+  for (const pair of CURRENCY_PAIRS) {
+    try {
+      const rate = await fetchCurrencyRate(pair.from, pair.to, config);
+
+      if (rate) {
+        const currentRate = parseFloat(rate["5. Exchange Rate"]) || 0;
+        dataPoints.push({
+          symbol: `${pair.from}${pair.to}`,
+          name: pair.name,
+          price: currentRate,
+          change: 0,
+          changePercent: 0,
+          timestamp: rate["6. Last Refreshed"] || new Date().toISOString(),
+          type: "currency",
+        });
+      }
+
+      await delay(1500);
+    } catch (error) {
+      const msg = `Failed to fetch ${pair.name}: ${error instanceof Error ? error.message : String(error)}`;
+      console.error(msg);
+      errors.push(msg);
+    }
   }
 
   if (errors.length > 0 && dataPoints.length === 0) {
-    throw new Error(`All requests failed: ${errors.join(", ")}`);
+    throw new Error(`All market data requests failed: ${errors.join("; ")}`);
   }
 
   return dataPoints;
@@ -125,108 +183,82 @@ export async function fetchAlphaMavenData(
  */
 export async function storeMarketData(
   dataPoints: MarketDataPoint[],
-  source: string = "alpha_maven",
+  source: string = "alpha_vantage",
   tenantId?: string
 ): Promise<MarketDataResult> {
   const errors: string[] = [];
   let successCount = 0;
 
-  try {
-    for (const dataPoint of dataPoints) {
-      try {
-        // Determine data type from symbol or data structure
-        let dataType = "equity";
-        if (dataPoint.symbol) {
-          if (
-            dataPoint.symbol.includes("USD") ||
-            dataPoint.symbol.includes("EUR") ||
-            dataPoint.symbol.includes("GBP") ||
-            dataPoint.symbol.includes("JPY")
-          ) {
-            dataType = "currency";
-          } else if (dataPoint.symbol === "VIX") {
-            dataType = "volatility";
-          } else if (
-            dataPoint.symbol.includes("BOND") ||
-            dataPoint.symbol.includes("Treasury")
-          ) {
-            dataType = "bond";
-          }
-        }
-
-        // Parse timestamp
-        const date = dataPoint.timestamp
-          ? new Date(dataPoint.timestamp)
-          : new Date();
-
-        await prisma.marketData.create({
-          data: {
-            type: dataType,
-            source,
-            data: JSON.stringify(dataPoint),
-            date,
-            tenantId: tenantId || null,
-          },
-        });
-
-        successCount++;
-      } catch (error) {
-        errors.push(
-          `Failed to store data for ${dataPoint.symbol || "unknown"}: ${
-            error instanceof Error ? error.message : String(error)
-          }`
-        );
-      }
+  for (const dataPoint of dataPoints) {
+    try {
+      await prisma.marketData.create({
+        data: {
+          type: dataPoint.type,
+          source,
+          data: JSON.stringify(dataPoint),
+          date: new Date(dataPoint.timestamp),
+          tenantId: tenantId || null,
+        },
+      });
+      successCount++;
+    } catch (error) {
+      const msg = `Failed to store ${dataPoint.symbol}: ${error instanceof Error ? error.message : String(error)}`;
+      console.error(msg);
+      errors.push(msg);
     }
-  } catch (error) {
-    throw new Error(
-      `Failed to store market data: ${
-        error instanceof Error ? error.message : String(error)
-      }`
-    );
   }
 
   return {
     success: errors.length === 0,
     dataPoints: successCount,
+    data: dataPoints,
     errors: errors.length > 0 ? errors : undefined,
   };
 }
 
 /**
- * Ingest market data from Alpha Maven and store in database
+ * Ingest market data from Alpha Vantage and store in database
  */
 export async function ingestMarketData(
   tenantId?: string
 ): Promise<MarketDataResult> {
-  const apiKey = process.env.ALPHA_MAVEN_API_KEY;
+  const apiKey = process.env.ALPHA_VANTAGE_API_KEY;
+  const baseUrl = process.env.ALPHA_VANTAGE_BASE_URL || "https://www.alphavantage.co";
 
   if (!apiKey) {
-    throw new Error("ALPHA_MAVEN_API_KEY environment variable is not set");
+    return {
+      success: false,
+      dataPoints: 0,
+      errors: ["ALPHA_VANTAGE_API_KEY environment variable is not set"],
+    };
   }
 
-  const config: AlphaMavenConfig = {
+  const config: AlphaVantageConfig = {
     apiKey,
-    baseUrl: process.env.ALPHA_MAVEN_BASE_URL,
-    symbols: process.env.ALPHA_MAVEN_SYMBOLS
-      ? process.env.ALPHA_MAVEN_SYMBOLS.split(",")
-      : undefined,
+    baseUrl,
   };
 
+  console.log(`Starting market data ingestion for tenant: ${tenantId || "all"}`);
+
   try {
-    // Fetch data from Alpha Maven
-    const dataPoints = await fetchAlphaMavenData(config);
+    // Fetch data from Alpha Vantage
+    const dataPoints = await fetchAlphaVantageData(config);
+    console.log(`Fetched ${dataPoints.length} market data points from Alpha Vantage`);
 
     // Store in database
-    const result = await storeMarketData(dataPoints, "alpha_maven", tenantId);
+    const result = await storeMarketData(dataPoints, "alpha_vantage", tenantId);
+    console.log(`Stored ${result.dataPoints} market data points in database`);
 
     return result;
   } catch (error) {
-    throw new Error(
-      `Market data ingestion failed: ${
-        error instanceof Error ? error.message : String(error)
-      }`
-    );
+    const errorMsg = error instanceof Error ? error.message : String(error);
+    console.error(`Market data ingestion failed: ${errorMsg}`);
+
+    return {
+      success: false,
+      dataPoints: 0,
+      errors: [errorMsg],
+    };
   }
 }
 
@@ -242,7 +274,7 @@ export async function getMarketData(
     source?: string;
     limit?: number;
   } = {}
-): Promise<any[]> {
+): Promise<MarketDataPoint[]> {
   const {
     tenantId,
     type,
@@ -284,41 +316,97 @@ export async function getMarketData(
     take: limit,
   });
 
-  return data.map((item) => ({
-    ...item,
-    data: JSON.parse(item.data),
-  }));
+  return data.map((item) => JSON.parse(item.data) as MarketDataPoint);
 }
 
 /**
- * Get latest market data for a specific type
+ * Get latest market data from database
  */
 export async function getLatestMarketData(
-  type: string,
-  tenantId?: string
-): Promise<any | null> {
+  tenantId?: string,
+  type?: "index" | "currency" | "volatility"
+): Promise<MarketDataPoint[]> {
   const where: any = {
-    type,
+    source: "alpha_vantage",
   };
 
   if (tenantId) {
     where.tenantId = tenantId;
   }
 
-  const data = await prisma.marketData.findFirst({
-    where,
+  if (type) {
+    where.type = type;
+  }
+
+  // Get most recent data for each symbol (within last 24 hours)
+  const oneDayAgo = new Date();
+  oneDayAgo.setDate(oneDayAgo.getDate() - 1);
+
+  const data = await prisma.marketData.findMany({
+    where: {
+      ...where,
+      date: {
+        gte: oneDayAgo,
+      },
+    },
     orderBy: {
       date: "desc",
     },
+    take: 20,
   });
 
-  if (!data) {
-    return null;
+  // Parse and deduplicate by symbol (keep most recent)
+  const seenSymbols = new Set<string>();
+  const results: MarketDataPoint[] = [];
+
+  for (const item of data) {
+    const parsed = JSON.parse(item.data) as MarketDataPoint;
+    if (!seenSymbols.has(parsed.symbol)) {
+      seenSymbols.add(parsed.symbol);
+      results.push(parsed);
+    }
   }
 
-  return {
-    ...data,
-    data: JSON.parse(data.data),
-  };
+  return results;
 }
 
+/**
+ * Format market data for use in briefing prompts
+ */
+export function formatMarketDataForPrompt(data: MarketDataPoint[]): string {
+  if (data.length === 0) {
+    return "Current market data is unavailable.";
+  }
+
+  const lines: string[] = ["Current Market Data:"];
+
+  // Group by type
+  const indices = data.filter((d) => d.type === "index");
+  const currencies = data.filter((d) => d.type === "currency");
+
+  if (indices.length > 0) {
+    lines.push("\nMajor Indices:");
+    for (const index of indices) {
+      const changeSign = index.change >= 0 ? "+" : "";
+      lines.push(
+        `- ${index.name} (${index.symbol}): $${index.price.toFixed(2)} (${changeSign}${index.changePercent.toFixed(2)}%)`
+      );
+    }
+  }
+
+  if (currencies.length > 0) {
+    lines.push("\nCurrency Rates:");
+    for (const currency of currencies) {
+      lines.push(`- ${currency.name}: ${currency.price.toFixed(4)}`);
+    }
+  }
+
+  return lines.join("\n");
+}
+
+/**
+ * Helper function to add delay between API calls
+ */
+function delay(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
