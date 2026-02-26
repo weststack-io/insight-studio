@@ -19,6 +19,7 @@ const NAV_ITEMS = [
   { href: "/reviews", label: "Reviews" },
   { href: "/compliance", label: "Compliance" },
   { href: "/sources", label: "Sources" },
+  { href: "/analytics", label: "Analytics" },
 ];
 
 interface User {

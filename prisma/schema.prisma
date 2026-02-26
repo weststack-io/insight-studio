@@ -339,3 +339,59 @@ model HouseView {
   @@index([tenantId, isActive])
   @@map("house_views")
 }
+
+model AnalyticsEvent {
+  id          String   @id @default(uuid())
+  tenantId    String   @map("tenant_id")
+  userId      String   @map("user_id")
+  contentId   String?  @map("content_id")
+  contentType String?  @map("content_type") // briefing, explainer, lesson
+  eventType   String   @map("event_type") // open, click, scroll, dwell, complete, feedback, search
+  metadata    String?  @db.NVarChar(Max) // JSON
+  sessionId   String?  @map("session_id")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  @@index([tenantId, userId])
+  @@index([tenantId, contentId, contentType])
+  @@index([eventType, createdAt])
+  @@index([sessionId])
+  @@map("analytics_events")
+}
+
+model EngagementMetrics {
+  id             String    @id @default(uuid())
+  tenantId       String    @map("tenant_id")
+  contentId      String    @map("content_id")
+  contentType    String    @map("content_type") // briefing, explainer, lesson
+  totalOpens     Int       @default(0) @map("total_opens")
+  uniqueOpens    Int       @default(0) @map("unique_opens")
+  avgDwellTime   Float     @default(0) @map("avg_dwell_time") // seconds
+  avgScrollDepth Float     @default(0) @map("avg_scroll_depth") // 0-100
+  completionRate Float     @default(0) @map("completion_rate") // 0-1
+  avgRating      Float?    @map("avg_rating") // 1-5
+  totalFeedback  Int       @default(0) @map("total_feedback")
+  engagementScore Float    @default(0) @map("engagement_score") // 0-100
+  lastEngagedAt  DateTime? @map("last_engaged_at")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+
+  @@unique([contentId, contentType])
+  @@index([tenantId, contentType])
+  @@index([engagementScore])
+  @@map("engagement_metrics")
+}
+
+model PreferenceLearningLog {
+  id            String   @id @default(uuid())
+  userId        String   @map("user_id")
+  topic         String
+  previousLevel String   @map("previous_level") // low, medium, high
+  newLevel      String   @map("new_level") // low, medium, high
+  reason        String   @db.NVarChar(Max) // JSON
+  confidence    Float // 0-1
+  appliedAt     DateTime @default(now()) @map("applied_at")
+
+  @@index([userId])
+  @@index([appliedAt])
+  @@map("preference_learning_log")
+}

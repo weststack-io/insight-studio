@@ -3,6 +3,8 @@
 import { Explainer } from '@/types';
 import { useState } from 'react';
 import { MarkdownContent } from './MarkdownContent';
+import { useContentTracking } from '@/lib/analytics/useContentTracking';
+import { ContentFeedback } from '@/components/analytics/ContentFeedback';
 
 interface ExplainerViewProps {
   explainer: Explainer;
@@ -12,6 +14,10 @@ interface ExplainerViewProps {
 export function ExplainerView({ explainer, onGenerate }: ExplainerViewProps) {
   const [loading, setLoading] = useState(false);
   const content = JSON.parse(explainer.content);
+  const { trackClick, containerRef } = useContentTracking({
+    contentId: explainer.id,
+    contentType: 'explainer',
+  });
 
   const handleRegenerate = async () => {
     if (onGenerate) {
@@ -25,7 +31,7 @@ export function ExplainerView({ explainer, onGenerate }: ExplainerViewProps) {
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-6">
+    <div ref={containerRef} className="bg-white rounded-lg shadow-md p-6">
       <div className="flex justify-between items-start mb-4">
         <h2 className="text-2xl font-bold text-primary">{content.title || explainer.topic}</h2>
         <button
@@ -75,6 +81,10 @@ export function ExplainerView({ explainer, onGenerate }: ExplainerViewProps) {
           </div>
         </div>
       )}
+
+      <div className="mt-6 pt-4 border-t border-gray-200">
+        <ContentFeedback contentId={explainer.id} contentType="explainer" />
+      </div>
     </div>
   );
 }

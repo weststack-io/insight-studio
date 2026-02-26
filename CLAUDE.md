@@ -44,6 +44,7 @@ npm run start              # Start Azure Functions locally
 app/                        # Next.js App Router
 ├── (auth)/                 # Auth layout (login)
 ├── (dashboard)/            # Protected dashboard routes
+│   ├── analytics/          # Analytics & engagement dashboard (advisor-only)
 │   ├── briefings/          # Weekly market briefings
 │   ├── compliance/         # Compliance dashboard
 │   ├── explainers/         # On-demand topic explainers
@@ -51,13 +52,15 @@ app/                        # Next.js App Router
 │   ├── reviews/            # Advisor content review queue
 │   └── sources/            # Content source management
 └── api/                    # API routes
+    └── analytics/          # Events, feedback, metrics, dashboard APIs
 
 lib/                        # Core business logic
 ├── ai/                     # Content generation & prompts
+├── analytics/              # Event tracking, metrics engine, reporting
 ├── azure/                  # Azure service clients (OpenAI, Search, Storage)
 ├── compliance/             # Guardrails, risk scoring, policy engine, citations
 ├── ingestion/              # Data ingestion pipeline
-└── personalization/        # Personalization algorithms
+└── personalization/        # Personalization algorithms, preference learning
 
 azure-functions/            # Scheduled jobs
 ├── weekly-briefings/       # Monday 9 AM briefing generation
@@ -77,13 +80,15 @@ infrastructure/             # Azure IaC (Bicep templates)
 - **RAG Pipeline**: Content generation uses Azure AI Search for retrieval-augmented generation
 - **Compliance System**: Multi-factor risk scoring, citation tracking, disclosure management, audit logging
 - **Review Workflow**: Advisor approval with versioning before client publication
+- **Analytics**: Event tracking, engagement metrics, preference learning, advisor dashboard
 - **Multi-Database**: Custom deployment scripts support multiple tenant databases
 
 ## Project Planning
 
 Sprint roadmap tracked in `.cursor/plans/technical-implementation-plan.md`:
 - Sprints 1-3: COMPLETED (citations, reviews, compliance, ingestion)
-- Sprints 4-6: PENDING (analytics, preferences learning, email, audio, Q&A)
+- Sprint 4: COMPLETED (analytics event tracking, engagement metrics, preference learning, dashboard)
+- Sprints 5-6: PENDING (email delivery, audio generation, Q&A, A/B testing)
 
 ## Development Guidelines (from .cursorrules)
 

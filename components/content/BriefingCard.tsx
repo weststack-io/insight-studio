@@ -3,6 +3,8 @@
 import { Briefing } from "@/types";
 import { format } from "date-fns";
 import { useState } from "react";
+import { useContentTracking } from "@/lib/analytics/useContentTracking";
+import { ContentFeedback } from "@/components/analytics/ContentFeedback";
 
 interface BriefingCardProps {
   briefing: Briefing;
@@ -13,6 +15,10 @@ export function BriefingCard({ briefing, onDelete }: BriefingCardProps) {
   const content = JSON.parse(briefing.content);
   const [isDeleting, setIsDeleting] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+  const { trackClick, containerRef } = useContentTracking({
+    contentId: briefing.id,
+    contentType: "briefing",
+  });
 
   const handleDelete = async () => {
     if (!onDelete) return;
@@ -37,7 +43,7 @@ export function BriefingCard({ briefing, onDelete }: BriefingCardProps) {
   };
 
   return (
-    <article className="bg-white rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition-shadow p-6 lg:p-8">
+    <article ref={containerRef} className="bg-white rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition-shadow p-6 lg:p-8">
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 mb-6">
         <div className="flex-1">
           <h3 className="text-xl lg:text-2xl font-bold text-gray-900 mb-2">
@@ -236,6 +242,10 @@ export function BriefingCard({ briefing, onDelete }: BriefingCardProps) {
           </ul>
         </div>
       )}
+
+      <div className="mt-6 pt-4 border-t border-gray-200">
+        <ContentFeedback contentId={briefing.id} contentType="briefing" />
+      </div>
     </article>
   );
 }

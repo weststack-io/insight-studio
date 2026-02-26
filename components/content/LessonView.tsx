@@ -3,6 +3,8 @@
 import { Lesson } from '@/types';
 import { MarkdownContent } from './MarkdownContent';
 import { useState } from 'react';
+import { useContentTracking } from '@/lib/analytics/useContentTracking';
+import { ContentFeedback } from '@/components/analytics/ContentFeedback';
 
 interface LessonViewProps {
   lesson: Lesson;
@@ -13,6 +15,10 @@ export function LessonView({ lesson, onDelete }: LessonViewProps) {
   const content = JSON.parse(lesson.content);
   const [isDeleting, setIsDeleting] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+  const { trackClick, containerRef } = useContentTracking({
+    contentId: lesson.id,
+    contentType: 'lesson',
+  });
 
   const handleDelete = async () => {
     if (!onDelete) return;
@@ -37,7 +43,7 @@ export function LessonView({ lesson, onDelete }: LessonViewProps) {
   };
 
   return (
-    <article className="bg-white rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition-shadow p-6 lg:p-8">
+    <article ref={containerRef} className="bg-white rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition-shadow p-6 lg:p-8">
       <div className="mb-6">
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 mb-4">
           <h3 className="text-xl lg:text-2xl font-bold text-gray-900">
@@ -138,6 +144,10 @@ export function LessonView({ lesson, onDelete }: LessonViewProps) {
           </ul>
         </div>
       )}
+
+      <div className="mt-6 pt-4 border-t border-gray-200">
+        <ContentFeedback contentId={lesson.id} contentType="lesson" />
+      </div>
     </article>
   );
 }
