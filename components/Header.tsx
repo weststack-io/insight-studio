@@ -61,7 +61,7 @@ export default function Header({
           <div className="flex items-center gap-6">
             <Link href="/dashboard" className="flex items-center gap-3">
               <div
-                className="w-10 h-10 rounded-full bg-accent
+                className="w-10 h-10 min-w-10 min-h-10 flex-shrink-0 rounded-full bg-accent
                            text-white flex items-center justify-center font-bold shadow-md"
                 aria-hidden
               >

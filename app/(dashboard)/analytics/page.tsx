@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useSession } from 'next-auth/react';
+import { useSession, signOut } from 'next-auth/react';
+import Header from '@/components/Header';
 import { KPICard } from '@/components/analytics/KPICard';
 import { EngagementTrend } from '@/components/analytics/EngagementTrend';
 import { TopicPopularity } from '@/components/analytics/TopicPopularity';
@@ -129,14 +130,17 @@ export default function AnalyticsPage() {
 
   if (!isAdvisor) {
     return (
-      <div className="min-h-screen bg-gray-50 pt-24 px-6">
-        <div className="max-w-4xl mx-auto text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">
-            Analytics Dashboard
-          </h1>
-          <p className="text-gray-500">
-            This page is only available to advisors.
-          </p>
+      <div className="min-h-screen bg-gray-50">
+        <Header tenant={user?.tenant} user={user} signOut={signOut} />
+        <div className="pt-24 px-6">
+          <div className="max-w-4xl mx-auto text-center">
+            <h1 className="text-2xl font-bold text-gray-900 mb-4">
+              Analytics Dashboard
+            </h1>
+            <p className="text-gray-500">
+              This page is only available to advisors.
+            </p>
+          </div>
         </div>
       </div>
     );
@@ -150,7 +154,9 @@ export default function AnalyticsPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50 pt-24 px-6 pb-12">
+    <div className="min-h-screen bg-gray-50">
+      <Header tenant={user?.tenant} user={user} signOut={signOut} />
+      <div className="pt-24 px-6 pb-12">
       <div className="max-w-7xl mx-auto">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
           <h1 className="text-2xl font-bold text-gray-900">
@@ -417,6 +423,7 @@ export default function AnalyticsPage() {
             )}
           </>
         )}
+      </div>
       </div>
     </div>
   );
