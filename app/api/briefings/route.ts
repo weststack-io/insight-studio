@@ -154,14 +154,13 @@ export async function POST(request: NextRequest) {
         // Format market data for prompt
         const marketSummary = recentMarketData
           .map((item) => {
-            const data = item.data;
-            if (data.symbol && data.price) {
-              const changePct = data.changePercent
+            if (item.symbol && item.price) {
+              const changePct = item.changePercent
                 ? `${
-                    data.changePercent > 0 ? "+" : ""
-                  }${data.changePercent.toFixed(2)}%`
+                    item.changePercent > 0 ? "+" : ""
+                  }${item.changePercent.toFixed(2)}%`
                 : "N/A";
-              return `${data.symbol}: $${data.price} (${changePct})`;
+              return `${item.symbol}: $${item.price} (${changePct})`;
             }
             return null;
           })

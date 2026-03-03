@@ -163,6 +163,27 @@ if (Test-Path "prisma") {
     }
 }
 
+# 8.2️⃣ Ensure node_modules has 'next' (standalone trace can omit it)
+# server.js requires('next') at runtime; without it you get "Cannot find module 'next'"
+if (-not (Test-Path ".\webdeploy\node_modules\next")) {
+    Write-Host "📦 Installing production deps in webdeploy (next not in standalone trace)..."
+    Push-Location ".\webdeploy"
+    try {
+        npm install --omit=dev
+        if (-not (Test-Path "node_modules\next")) {
+            Write-Host "   ❌ ERROR: next still missing after npm install" -ForegroundColor Red
+            exit 1
+        }
+        Write-Host "   ✅ node_modules/next installed" -ForegroundColor Green
+    }
+    finally {
+        Pop-Location
+    }
+}
+else {
+    Write-Host "   ✅ node_modules/next present from standalone" -ForegroundColor Green
+}
+
 # 8.5️⃣ Final verification before zipping
 Write-Host "🔍 Final verification of webdeploy folder..."
 if (-not (Test-Path ".\webdeploy\server.js")) {

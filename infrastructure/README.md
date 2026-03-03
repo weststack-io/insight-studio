@@ -24,7 +24,7 @@ az deployment group create \
   --resource-group rg-insightstudio \
   --template-file main.bicep \
   --parameters sqlAdminUsername=insightstudioadmin \
-               sqlAdminPassword="YourSecurePassword123!"
+               sqlAdminPassword="Welcome2InsightStudio!"
 ```
 
 ## Outputs
@@ -47,9 +47,11 @@ Use these values to configure your application's environment variables.
 ## Deployment Modes
 
 ### Basic Deployment
+
 Deploys only SQL Database and Blob Storage. Use this for initial setup or when you don't need the App Service yet.
 
 ### Full Deployment
+
 Deploys SQL Database, Blob Storage, and App Service with all required environment variables configured. Requires Azure AD, OpenAI, AI Search, and NextAuth credentials.
 
 See `DEPLOY.md` for detailed instructions on both deployment modes.

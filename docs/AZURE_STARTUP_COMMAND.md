@@ -95,6 +95,17 @@ cd /home/site/wwwroot && node server.js
 cd /home/site/wwwroot && node server.js
 ```
 
+### Error: Cannot find module 'next'
+
+**Cause:** The app is started with `node server.js` (from Next.js standalone), which does `require('next')`. At runtime there is no `node_modules/next` in `/home/site/wwwroot`. That usually means either the deployment zip didn’t include a full `node_modules`, or the standalone build’s traced `node_modules` didn’t include `next`.
+
+**Fix:**
+
+- **If you deploy using `webdeploy.ps1`:** The script was updated to run `npm install --omit=dev` inside the webdeploy folder when `next` is missing, so the zip includes a complete `node_modules`. Re-run `.\webdeploy.ps1` and redeploy the new zip.
+- **If you deploy another way (e.g. GitHub Actions):** Ensure the artifact you deploy includes `node_modules` with `next` (e.g. run `npm install --omit=dev` in the build output before zipping), or set the startup command to install then start:  
+  `cd /home/site/wwwroot && npm install --omit=dev && node server.js`  
+  (Slower on first start; prefer fixing the build so `node_modules` is in the zip.)
+
 ### App still fails at runtime with Prisma/client errors
 
 If the Prisma client is missing at runtime (e.g. deploy doesn’t run `npm install` or postinstall), ensure your deployment runs `npm install` from the app root so `postinstall` runs `prisma generate`. If you truly cannot run install on deploy, then you’d need a startup command that runs from wwwroot and has node_modules (e.g. `cd /home/site/wwwroot && ./node_modules/.bin/prisma generate && node server.js`), but that only works if `node_modules` already exists in wwwroot.
