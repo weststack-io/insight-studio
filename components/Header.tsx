@@ -16,15 +16,16 @@ const NAV_ITEMS = [
   { href: "/briefings", label: "Briefings" },
   { href: "/explainers", label: "Explainers" },
   { href: "/lessons", label: "Lessons" },
-  { href: "/reviews", label: "Reviews" },
-  { href: "/compliance", label: "Compliance" },
-  { href: "/sources", label: "Sources" },
-  { href: "/analytics", label: "Analytics" },
+  { href: "/reviews", label: "Reviews", advisorOnly: true },
+  { href: "/compliance", label: "Compliance", advisorOnly: true },
+  { href: "/sources", label: "Sources", advisorOnly: true },
+  { href: "/analytics", label: "Analytics", advisorOnly: true },
 ];
 
 interface User {
   name?: string;
   email?: string;
+  role?: string | null;
 }
 
 interface HeaderProps {
@@ -40,6 +41,10 @@ export default function Header({
 }: HeaderProps) {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
+  const isAdvisor = user?.role === "advisor";
+  const visibleNavItems = NAV_ITEMS.filter(
+    (item) => !item.advisorOnly || isAdvisor
+  );
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
@@ -74,7 +79,7 @@ export default function Header({
 
             {/* Desktop nav */}
             <div className="hidden md:flex items-center gap-2">
-              {NAV_ITEMS.map((item) => {
+              {visibleNavItems.map((item) => {
                 const isActive = pathname === item.href;
                 return (
                   <Link
@@ -177,7 +182,7 @@ export default function Header({
           </div>
 
           <div className="flex flex-col gap-1">
-            {NAV_ITEMS.map((item) => {
+            {visibleNavItems.map((item) => {
               const isActive = pathname === item.href;
               return (
                 <Link
