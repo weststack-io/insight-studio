@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useSession } from "next-auth/react";
+import { useSession, signOut } from "next-auth/react";
 import Header from "@/components/Header";
 import {
   IconRss,
@@ -37,6 +37,8 @@ interface IngestionConfig {
 
 export default function SourcesPage() {
   const { data: session } = useSession();
+  const user = session?.user as any;
+  const tenant = user?.tenant;
   const [sources, setSources] = useState<ContentSource[]>([]);
   const [ingestions, setIngestions] = useState<IngestionConfig[]>([]);
   const [loading, setLoading] = useState(true);
@@ -211,7 +213,7 @@ export default function SourcesPage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <Header />
+        <Header tenant={tenant} user={user} signOut={signOut} />
         <div className="pt-16 p-8">
           <div className="max-w-7xl mx-auto">
             <div className="text-center py-12">Loading...</div>
@@ -223,7 +225,7 @@ export default function SourcesPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header />
+      <Header tenant={tenant} user={user} signOut={signOut} />
       <div className="pt-25 p-8">
         <div className="max-w-7xl mx-auto">
           <div className="mb-8">
