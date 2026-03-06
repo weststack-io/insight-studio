@@ -1,4 +1,5 @@
 import { prisma } from '@/lib/db/client';
+import { recalculateMetrics } from './metrics';
 
 const VALID_EVENT_TYPES = [
   'open',
@@ -73,6 +74,24 @@ export async function recordEvents(
     data: validEvents,
   });
 
+  // Keep engagement_metrics in sync with fresh event data.
+  const touchedContent = new Set<string>();
+  for (const event of validEvents) {
+    if (!event.contentId || !event.contentType) continue;
+    touchedContent.add(`${event.contentId}::${event.contentType}`);
+  }
+
+  try {
+    await Promise.all(
+      Array.from(touchedContent).map((key) => {
+        const [contentId, contentType] = key.split('::');
+        return recalculateMetrics(contentId, contentType, tenantId);
+      })
+    );
+  } catch (error) {
+    console.warn('Failed to recalculate engagement metrics after events:', error);
+  }
+
   return result.count;
 }
 
@@ -102,39 +121,46 @@ export async function recordFeedback(
     },
   });
 
-  // Update pre-aggregated avg rating
-  const feedbackEvents = await prisma.analyticsEvent.findMany({
-    where: { contentId, contentType, eventType: 'feedback' },
-    select: { metadata: true },
-  });
+  try {
+    // Update pre-aggregated avg rating
+    const feedbackEvents = await prisma.analyticsEvent.findMany({
+      where: { contentId, contentType, eventType: 'feedback' },
+      select: { metadata: true },
+    });
 
-  const ratings = feedbackEvents
-    .map((e) => {
-      try {
-        return JSON.parse(e.metadata || '{}').rating as number;
-      } catch {
-        return null;
-      }
-    })
-    .filter((r): r is number => r != null);
+    const ratings = feedbackEvents
+      .map((e) => {
+        try {
+          return JSON.parse(e.metadata || '{}').rating as number;
+        } catch {
+          return null;
+        }
+      })
+      .filter((r): r is number => r != null);
 
-  const avgRating =
-    ratings.length > 0
-      ? ratings.reduce((a, b) => a + b, 0) / ratings.length
-      : null;
+    const avgRating =
+      ratings.length > 0
+        ? ratings.reduce((a, b) => a + b, 0) / ratings.length
+        : null;
 
-  await prisma.engagementMetrics.upsert({
-    where: { contentId_contentType: { contentId, contentType } },
-    create: {
-      tenantId,
-      contentId,
-      contentType,
-      avgRating,
-      totalFeedback: ratings.length,
-    },
-    update: {
-      avgRating,
-      totalFeedback: ratings.length,
-    },
-  });
+    await prisma.engagementMetrics.upsert({
+      where: { contentId_contentType: { contentId, contentType } },
+      create: {
+        tenantId,
+        contentId,
+        contentType,
+        avgRating,
+        totalFeedback: ratings.length,
+      },
+      update: {
+        avgRating,
+        totalFeedback: ratings.length,
+      },
+    });
+
+    // Ensure all engagement fields stay up to date after feedback events.
+    await recalculateMetrics(contentId, contentType, tenantId);
+  } catch (error) {
+    console.warn('Failed to update engagement metrics after feedback:', error);
+  }
 }

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth/config';
 import { prisma } from '@/lib/db/client';
+import { batchRecalculateMetrics } from '@/lib/analytics/metrics';
 
 export async function GET(request: NextRequest) {
   try {
@@ -46,11 +47,34 @@ export async function GET(request: NextRequest) {
       ? sort
       : 'engagementScore';
 
-    const metrics = await prisma.engagementMetrics.findMany({
-      where,
-      orderBy: { [orderByField]: 'desc' },
-      take: Math.min(limit, 100),
-    });
+    let metrics: Awaited<ReturnType<typeof prisma.engagementMetrics.findMany>> = [];
+    try {
+      metrics = await prisma.engagementMetrics.findMany({
+        where,
+        orderBy: { [orderByField]: 'desc' },
+        take: Math.min(limit, 100),
+      });
+
+      if (metrics.length === 0) {
+        const hasEvents = await prisma.analyticsEvent.count({
+          where: { tenantId, createdAt: { gte: startDate } },
+        });
+
+        if (hasEvents > 0) {
+          await batchRecalculateMetrics(tenantId);
+          metrics = await prisma.engagementMetrics.findMany({
+            where,
+            orderBy: { [orderByField]: 'desc' },
+            take: Math.min(limit, 100),
+          });
+        }
+      }
+    } catch (error) {
+      console.warn(
+        'Engagement metrics unavailable in metrics route, returning empty metrics list:',
+        error
+      );
+    }
 
     return NextResponse.json({ metrics });
   } catch (error) {

@@ -165,18 +165,29 @@ export function calculateEngagementScore({
  * Batch recalculate metrics for all content with recent events.
  */
 export async function batchRecalculateMetrics(tenantId: string) {
-  // Find all distinct content with events in this tenant
-  const contentItems = await prisma.analyticsEvent.findMany({
-    where: { tenantId, contentId: { not: null } },
-    distinct: ['contentId', 'contentType'],
+  // Fetch event content references and de-duplicate in app code.
+  // This avoids SQL DISTINCT edge cases across adapters/providers.
+  const contentEventRefs = await prisma.analyticsEvent.findMany({
+    where: {
+      tenantId,
+      contentId: { not: null },
+      contentType: { not: null },
+    },
     select: { contentId: true, contentType: true },
   });
 
-  for (const item of contentItems) {
-    if (item.contentId && item.contentType) {
-      await recalculateMetrics(item.contentId, item.contentType, tenantId);
+  const uniqueContent = new Set<string>();
+  for (const item of contentEventRefs) {
+    if (!item.contentId || !item.contentType) continue;
+    uniqueContent.add(`${item.contentId}::${item.contentType}`);
+  }
+
+  for (const key of uniqueContent) {
+    const [contentId, contentType] = key.split('::');
+    if (contentId && contentType) {
+      await recalculateMetrics(contentId, contentType, tenantId);
     }
   }
 
-  return contentItems.length;
+  return uniqueContent.size;
 }

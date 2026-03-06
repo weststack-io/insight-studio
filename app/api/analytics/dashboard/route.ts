@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth/config';
 import { prisma } from '@/lib/db/client';
+import { batchRecalculateMetrics } from '@/lib/analytics/metrics';
 
 export async function GET(request: NextRequest) {
   try {
@@ -29,7 +30,7 @@ export async function GET(request: NextRequest) {
     startDate.setDate(startDate.getDate() - periodDays);
 
     // KPI data
-    const [totalEvents, recentEvents, metrics] = await Promise.all([
+    const [totalEvents, recentEvents] = await Promise.all([
       prisma.analyticsEvent.count({
         where: { tenantId, createdAt: { gte: startDate } },
       }),
@@ -37,11 +38,28 @@ export async function GET(request: NextRequest) {
         where: { tenantId, createdAt: { gte: startDate } },
         select: { userId: true, eventType: true, createdAt: true, contentType: true },
       }),
-      prisma.engagementMetrics.findMany({
+    ]);
+
+    let metrics: Awaited<ReturnType<typeof prisma.engagementMetrics.findMany>> = [];
+    try {
+      metrics = await prisma.engagementMetrics.findMany({
         where: { tenantId },
         orderBy: { engagementScore: 'desc' },
-      }),
-    ]);
+      });
+
+      if (metrics.length === 0 && totalEvents > 0) {
+        await batchRecalculateMetrics(tenantId);
+        metrics = await prisma.engagementMetrics.findMany({
+          where: { tenantId },
+          orderBy: { engagementScore: 'desc' },
+        });
+      }
+    } catch (error) {
+      console.warn(
+        'Engagement metrics unavailable in dashboard route, using event-only analytics:',
+        error
+      );
+    }
 
     const activeUsers = new Set(recentEvents.map((e) => e.userId)).size;
     const openEvents = recentEvents.filter((e) => e.eventType === 'open').length;

@@ -43,6 +43,10 @@ export default function AnalyticsPage() {
   const [reportPeriod, setReportPeriod] = useState('30d');
   const [reportData, setReportData] = useState<any>(null);
   const [generatingReport, setGeneratingReport] = useState(false);
+  const [reportError, setReportError] = useState<string | null>(null);
+  const [backfilling, setBackfilling] = useState(false);
+  const [backfillMessage, setBackfillMessage] = useState<string | null>(null);
+  const [backfillError, setBackfillError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!isAdvisor) return;
@@ -97,19 +101,22 @@ export default function AnalyticsPage() {
 
   const handleGenerateReport = async () => {
     setGeneratingReport(true);
+    setReportError(null);
     try {
-      const now = new Date();
-      const days = reportPeriod === '7d' ? 7 : reportPeriod === '90d' ? 90 : 30;
-      const start = new Date(now);
-      start.setDate(start.getDate() - days);
-
       // Use metrics and dashboard data to build a report
       const res = await fetch(`/api/analytics/dashboard?period=${reportPeriod}`);
       if (res.ok) {
         setReportData(await res.json());
+      } else {
+        const data = await res.json().catch(() => null);
+        throw new Error(data?.error || 'Failed to generate report');
       }
     } catch (err) {
       console.error('Failed to generate report:', err);
+      setReportData(null);
+      setReportError(
+        err instanceof Error ? err.message : 'Failed to generate report'
+      );
     } finally {
       setGeneratingReport(false);
     }
@@ -126,6 +133,47 @@ export default function AnalyticsPage() {
     a.download = `engagement-report-${new Date().toISOString().slice(0, 10)}.json`;
     a.click();
     URL.revokeObjectURL(url);
+  };
+
+  const handleBackfillMetrics = async () => {
+    setBackfilling(true);
+    setBackfillMessage(null);
+    setBackfillError(null);
+
+    try {
+      const res = await fetch('/api/analytics/backfill', {
+        method: 'POST',
+      });
+
+      const data = await res.json().catch(() => null);
+      if (!res.ok) {
+        const detail = data?.details ? ` (${data.details})` : '';
+        throw new Error((data?.error || 'Failed to rebuild metrics') + detail);
+      }
+
+      const processed = data?.processedContentItems ?? 0;
+      const events = data?.eventCount ?? 0;
+      const before = data?.beforeMetricsCount ?? 0;
+      const after = data?.afterMetricsCount ?? 0;
+
+      setBackfillMessage(
+        `Rebuilt ${processed} content item(s) from ${events} event(s). Metrics rows: ${before} -> ${after}.`
+      );
+
+      if (activeTab === 'overview') {
+        await fetchDashboardData();
+      }
+      if (activeTab === 'performance') {
+        await fetchMetrics();
+      }
+    } catch (err) {
+      console.error('Failed to backfill analytics metrics:', err);
+      setBackfillError(
+        err instanceof Error ? err.message : 'Failed to rebuild metrics'
+      );
+    } finally {
+      setBackfilling(false);
+    }
   };
 
   if (!isAdvisor) {
@@ -362,7 +410,26 @@ export default function AnalyticsPage() {
                     >
                       {generatingReport ? 'Generating...' : 'Generate Report'}
                     </button>
+                    <button
+                      type="button"
+                      onClick={handleBackfillMetrics}
+                      disabled={backfilling}
+                      className="px-4 py-2 border border-gray-300 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                    >
+                      {backfilling
+                        ? 'Rebuilding...'
+                        : 'Rebuild Analytics Metrics'}
+                    </button>
                   </div>
+                  {reportError && (
+                    <p className="text-sm text-red-600 mt-3">{reportError}</p>
+                  )}
+                  {backfillError && (
+                    <p className="text-sm text-red-600 mt-3">{backfillError}</p>
+                  )}
+                  {backfillMessage && (
+                    <p className="text-sm text-green-700 mt-3">{backfillMessage}</p>
+                  )}
                 </div>
 
                 {reportData && (
