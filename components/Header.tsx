@@ -147,7 +147,7 @@ export default function Header({
       {/* Mobile panel */}
       <div
         id="mobile-menu"
-        className={`md:hidden origin-top transform transition-all duration-200 ease-in-out
+        className={`md:hidden absolute top-16 left-0 right-0 z-30 origin-top transform transition-all duration-200 ease-in-out
                     ${
                       open
                         ? "opacity-100 scale-y-100"
@@ -155,7 +155,7 @@ export default function Header({
                     }`}
         style={{ transformOrigin: "top" }}
       >
-        <div className="mx-auto px-4 pt-2 pb-4 border-t border-gray-200/60 bg-white/80 backdrop-blur-sm">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 pt-2 pb-4 border-t border-gray-200/60 bg-white/95 backdrop-blur-sm shadow-lg max-h-[calc(100vh-4rem)] overflow-y-auto">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-3">
               <div className="w-9 h-9 rounded-full bg-accent flex items-center justify-center text-white font-semibold">
