@@ -128,3 +128,7 @@ See [docs/THEME_CONFIGURATION.md](docs/THEME_CONFIGURATION.md) for detailed docu
 - Adding and configuring themes
 - Available CSS variables and utility classes
 - Best practices and troubleshooting
+
+## License
+
+[MIT](LICENSE)
