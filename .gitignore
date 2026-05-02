@@ -118,4 +118,9 @@ temp/
 *.temp
 
 prisma/databases.json
-prisma/databases.json
+
+# Local config
+local.settings.json
+.claude/
+.mcp.json
+app-logs*/
