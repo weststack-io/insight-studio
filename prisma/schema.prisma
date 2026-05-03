@@ -57,6 +57,7 @@ model User {
   sessions          Session[]
   contentReviews    ContentReview[]
   reviewedBriefings Briefing[]       @relation("Reviewer")
+  questions         Question[]
 
   @@map("users")
 }
@@ -257,6 +258,24 @@ model ContentVersion {
   @@unique([contentId, contentType, version])
   @@index([contentId, contentType])
   @@map("content_versions")
+}
+
+model Question {
+  id          String   @id @default(uuid())
+  userId      String   @map("user_id")
+  contentId   String   @map("content_id")
+  contentType String   @map("content_type") // briefing, explainer, lesson
+  question    String   @db.NVarChar(Max)
+  answer      String?  @db.NVarChar(Max)
+  status      String   @default("answered") // answered, escalated, rejected
+  askedAt     DateTime @default(now()) @map("asked_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, askedAt])
+  @@index([contentId, contentType])
+  @@index([status])
+  @@map("questions")
 }
 
 model Policy {

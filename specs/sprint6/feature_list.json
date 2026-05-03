@@ -1,0 +1,346 @@
+[
+  {
+    "id": "S6-001",
+    "category": "database",
+    "description": "Question model added to Prisma schema",
+    "steps": [
+      "Open prisma/schema.prisma",
+      "Verify Question model exists with fields: id, userId, contentId, contentType, question, answer, status, askedAt",
+      "Verify relations to User model",
+      "Run npx prisma validate to confirm schema is valid",
+      "Run npx prisma generate to confirm client generates successfully"
+    ],
+    "passes": true
+  },
+  {
+    "id": "S6-002",
+    "category": "database",
+    "description": "ABTest and ABTestAssignment models added to Prisma schema",
+    "steps": [
+      "Open prisma/schema.prisma",
+      "Verify ABTest model exists with fields: id, name, contentType, variants (JSON), startDate, endDate, status, tenantId, createdAt",
+      "Verify ABTestAssignment model exists with fields: id, testId, userId, variant, assignedAt",
+      "Verify relations between ABTest, ABTestAssignment, User, and Tenant",
+      "Run npx prisma validate to confirm schema is valid",
+      "Run npx prisma generate to confirm client generates successfully"
+    ],
+    "passes": false
+  },
+  {
+    "id": "S6-003",
+    "category": "database",
+    "description": "Database migration applies cleanly for Sprint 6 models",
+    "steps": [
+      "Run npm run db:push to apply schema changes",
+      "Verify no errors during migration",
+      "Verify Question, ABTest, and ABTestAssignment tables exist in database"
+    ],
+    "passes": false
+  },
+  {
+    "id": "S6-004",
+    "category": "functional",
+    "description": "Q&A generator produces RAG-powered answers with citations",
+    "steps": [
+      "Verify lib/qa/generator.ts exists",
+      "Verify generateAnswer() function accepts a question string, contentId, contentType, and userId",
+      "Verify it performs RAG search via Azure AI Search to retrieve relevant context",
+      "Verify it calls Azure OpenAI to generate an answer using retrieved context",
+      "Verify the response includes the answer text, citations array, and confidence score",
+      "Verify citations reference actual source documents from the RAG search results"
+    ],
+    "passes": false
+  },
+  {
+    "id": "S6-005",
+    "category": "functional",
+    "description": "Q&A guardrails detect prohibited questions and validate answers",
+    "steps": [
+      "Verify lib/qa/guardrails.ts exists",
+      "Verify validateQuestion() screens for prohibited question types (specific investment advice, account details, PII requests)",
+      "Verify validateAnswer() checks that answers contain required disclaimers and no prohibited claims",
+      "Verify escalateToAdvisor() flags complex or high-risk questions for advisor review",
+      "Verify a prohibited question returns a rejection response with reason",
+      "Verify a valid question passes guardrails and proceeds to answer generation"
+    ],
+    "passes": false
+  },
+  {
+    "id": "S6-006",
+    "category": "functional",
+    "description": "Q&A API endpoint accepts questions and returns answers",
+    "steps": [
+      "Verify app/api/qa/route.ts exists with POST handler",
+      "Submit a POST request with a question, contentId, and contentType",
+      "Verify the response includes answer text, citations, and confidence score",
+      "Verify unauthenticated requests return 401",
+      "Verify the question and answer are persisted to the Question table in the database",
+      "Verify the question status is set appropriately (answered, escalated, or rejected)"
+    ],
+    "passes": false
+  },
+  {
+    "id": "S6-007",
+    "category": "functional",
+    "description": "Q&A API returns question history for a user",
+    "steps": [
+      "Verify app/api/qa/route.ts has a GET handler",
+      "Submit a GET request with optional contentId filter",
+      "Verify it returns a list of past questions and answers for the authenticated user",
+      "Verify questions are ordered by askedAt descending (most recent first)",
+      "Verify unauthenticated requests return 401"
+    ],
+    "passes": false
+  },
+  {
+    "id": "S6-008",
+    "category": "ui",
+    "description": "Q&A chat interface renders on content pages",
+    "steps": [
+      "Verify components/qa/QAInterface.tsx exists",
+      "Navigate to a briefing detail page",
+      "Verify a Q&A section or expandable panel is visible",
+      "Verify the interface includes a text input for asking questions",
+      "Verify the interface includes a submit button",
+      "Verify the interface displays a placeholder or welcome message when no questions have been asked"
+    ],
+    "passes": false
+  },
+  {
+    "id": "S6-009",
+    "category": "ui",
+    "description": "Q&A interface displays answers with citations",
+    "steps": [
+      "Navigate to a content page with the Q&A interface",
+      "Type a question in the input field and submit",
+      "Verify a loading/thinking indicator appears while the answer generates",
+      "Verify the answer text is displayed in a chat-like bubble or card",
+      "Verify citations are displayed below or alongside the answer with source names",
+      "Verify the confidence score is shown (e.g., as a badge or indicator)"
+    ],
+    "passes": false
+  },
+  {
+    "id": "S6-010",
+    "category": "ui",
+    "description": "Q&A interface shows question history for current content",
+    "steps": [
+      "Navigate to a content page where questions have been previously asked",
+      "Verify past questions and answers are displayed in chronological order",
+      "Verify each Q&A pair shows the question, answer, citations, and timestamp",
+      "Verify new questions appear at the bottom of the conversation thread"
+    ],
+    "passes": false
+  },
+  {
+    "id": "S6-011",
+    "category": "ui",
+    "description": "Q&A guardrails show user-friendly rejection messages",
+    "steps": [
+      "Navigate to the Q&A interface on a content page",
+      "Submit a question that would be prohibited (e.g., 'Should I buy this stock?')",
+      "Verify the interface displays a polite rejection message explaining why the question can't be answered",
+      "Verify the rejection includes a suggestion to contact their advisor for personalized advice",
+      "Verify the rejected question still appears in the conversation history with its status"
+    ],
+    "passes": false
+  },
+  {
+    "id": "S6-012",
+    "category": "functional",
+    "description": "Q&A escalation flags questions for advisor review",
+    "steps": [
+      "Submit a question that triggers escalation (complex or high-risk topic)",
+      "Verify the question status is set to 'escalated' in the database",
+      "Verify the user receives a message indicating their question has been sent to an advisor",
+      "Verify escalated questions appear in the advisor review queue or a dedicated Q&A review section"
+    ],
+    "passes": false
+  },
+  {
+    "id": "S6-013",
+    "category": "functional",
+    "description": "A/B testing framework supports variant assignment",
+    "steps": [
+      "Verify lib/testing/ab-testing.ts exists",
+      "Verify createTest() can create an A/B test with name, content type, variants, and date range",
+      "Verify assignVariant() deterministically assigns a user to a variant (consistent on repeated calls)",
+      "Verify getAssignment() retrieves a user's existing variant assignment for a test",
+      "Verify variant assignment is persisted to ABTestAssignment table"
+    ],
+    "passes": false
+  },
+  {
+    "id": "S6-014",
+    "category": "functional",
+    "description": "A/B testing framework calculates statistical significance",
+    "steps": [
+      "Verify lib/testing/ab-testing.ts includes a calculateSignificance() function",
+      "Verify it accepts engagement metrics for each variant (e.g., open rate, completion rate, dwell time)",
+      "Verify it returns a p-value or confidence level for the difference between variants",
+      "Verify it correctly identifies when results are statistically significant (p < 0.05)",
+      "Verify it handles edge cases: zero events, single variant, identical metrics"
+    ],
+    "passes": false
+  },
+  {
+    "id": "S6-015",
+    "category": "functional",
+    "description": "Content variant generation produces different content formats",
+    "steps": [
+      "Verify lib/testing/variants.ts exists",
+      "Verify generateVariants() can produce different content variations for a given piece of content",
+      "Verify variants can differ by format (e.g., concise vs detailed, text vs bullet points)",
+      "Verify each variant is tagged with a variant identifier for tracking",
+      "Verify variant metadata is stored for later analysis"
+    ],
+    "passes": false
+  },
+  {
+    "id": "S6-016",
+    "category": "functional",
+    "description": "A/B test management API supports CRUD operations",
+    "steps": [
+      "Verify app/api/testing/route.ts exists",
+      "Submit a POST request to create a new A/B test with name, variants, and date range",
+      "Verify the test is persisted to the ABTest table",
+      "Submit a GET request to list all A/B tests for the tenant",
+      "Verify tests are returned with their status (draft, active, completed)",
+      "Verify only advisor-role users can create and manage tests",
+      "Verify unauthenticated requests return 401"
+    ],
+    "passes": false
+  },
+  {
+    "id": "S6-017",
+    "category": "functional",
+    "description": "A/B test results API returns variant performance metrics",
+    "steps": [
+      "Verify app/api/testing/[testId]/results/route.ts exists (or equivalent endpoint)",
+      "Submit a GET request with a test ID",
+      "Verify the response includes per-variant metrics: open rate, completion rate, avg dwell time, avg rating",
+      "Verify the response includes statistical significance calculation",
+      "Verify the response includes sample sizes per variant",
+      "Verify only advisor-role users can access test results"
+    ],
+    "passes": false
+  },
+  {
+    "id": "S6-018",
+    "category": "ui",
+    "description": "A/B test management page allows creating and viewing tests",
+    "steps": [
+      "Navigate to /testing as an advisor user",
+      "Verify the page loads with a list of existing A/B tests (or empty state)",
+      "Click a 'Create Test' button",
+      "Fill in test name, select content type, define variant names, set start and end dates",
+      "Submit the form and verify the new test appears in the list",
+      "Verify each test in the list shows name, status, date range, and participant count"
+    ],
+    "passes": false
+  },
+  {
+    "id": "S6-019",
+    "category": "ui",
+    "description": "A/B test results page shows variant performance comparison",
+    "steps": [
+      "Navigate to /testing as an advisor user",
+      "Click on an existing A/B test to view its results",
+      "Verify a comparison view shows metrics for each variant side by side",
+      "Verify engagement metrics are displayed: open rate, completion rate, dwell time, rating",
+      "Verify statistical significance indicator is shown (e.g., 'Significant' or 'Not yet significant')",
+      "Verify sample sizes are displayed for each variant"
+    ],
+    "passes": false
+  },
+  {
+    "id": "S6-020",
+    "category": "ui",
+    "description": "A/B testing page is accessible from advisor navigation",
+    "steps": [
+      "Sign in as an advisor user",
+      "Verify a 'Testing' or 'A/B Testing' link appears in the navigation header",
+      "Click the navigation link",
+      "Verify it navigates to the /testing page",
+      "Verify the link is NOT visible for non-advisor (family_member/trustee) users"
+    ],
+    "passes": false
+  },
+  {
+    "id": "S6-021",
+    "category": "functional",
+    "description": "A/B test variant assignment integrates with content delivery",
+    "steps": [
+      "Create an active A/B test for briefings",
+      "Verify that when a client user views a briefing, they are assigned a variant",
+      "Verify the variant assignment is recorded in ABTestAssignment",
+      "Verify the same user consistently receives the same variant for the same test",
+      "Verify analytics events for the content include the variant identifier"
+    ],
+    "passes": false
+  },
+  {
+    "id": "S6-022",
+    "category": "functional",
+    "description": "Enhanced confidence scoring for citations",
+    "steps": [
+      "Verify lib/compliance/confidence-scoring.ts exists",
+      "Verify calculateConfidence() evaluates source reliability, recency, and relevance",
+      "Verify confidence thresholds are enforced (content below threshold is flagged)",
+      "Verify low-confidence content is automatically routed for advisor review",
+      "Verify confidence scores are persisted with citations in the database"
+    ],
+    "passes": false
+  },
+  {
+    "id": "S6-023",
+    "category": "functional",
+    "description": "Q&A engagement events are tracked in analytics",
+    "steps": [
+      "Ask a question through the Q&A interface",
+      "Verify a 'qa_question' analytics event is recorded in the AnalyticsEvent table",
+      "Verify the event includes metadata: contentId, contentType, question length",
+      "Verify a 'qa_answer' event is recorded when the answer is displayed",
+      "Verify Q&A engagement appears in the analytics dashboard metrics"
+    ],
+    "passes": false
+  },
+  {
+    "id": "S6-024",
+    "category": "ui",
+    "description": "Q&A interface is available on explainer and lesson pages (not just briefings)",
+    "steps": [
+      "Navigate to an explainer detail page",
+      "Verify the Q&A interface is present and functional",
+      "Navigate to a lesson detail page",
+      "Verify the Q&A interface is present and functional",
+      "Ask a question on each content type and verify answers are returned with correct contentType"
+    ],
+    "passes": false
+  },
+  {
+    "id": "S6-025",
+    "category": "functional",
+    "description": "A/B test lifecycle management (activate, pause, complete)",
+    "steps": [
+      "Create a new A/B test via API (starts in 'draft' status)",
+      "Activate the test and verify status changes to 'active'",
+      "Pause the test and verify status changes to 'paused' and no new assignments are made",
+      "Resume the test and verify it returns to 'active'",
+      "Complete the test and verify status changes to 'completed' and results are finalized",
+      "Verify completed tests cannot be reactivated"
+    ],
+    "passes": false
+  },
+  {
+    "id": "S6-026",
+    "category": "integration",
+    "description": "Build compiles cleanly with all Sprint 6 changes",
+    "steps": [
+      "Run npx tsc --noEmit to verify TypeScript compiles without errors",
+      "Run npm run build to verify the production build succeeds",
+      "Run npm run lint to verify no linting errors"
+    ],
+    "passes": false
+  }
+]

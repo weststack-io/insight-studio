@@ -1,0 +1,27 @@
+## Session 1 -- Database
+Date: 2026-05-03
+
+### Feature Worked On
+- S6-001: Question model added to Prisma schema
+- Status: PASSED
+
+### What Was Done
+- Added a `Question` Prisma model with `id`, `userId`, `contentId`, `contentType`, `question`, `answer`, `status`, and `askedAt` fields.
+- Added the `User.questions` relation so user question history can be queried through Prisma.
+- Added indexes for user history, content filtering, and question status lookup.
+- Files created or modified: `prisma/schema.prisma`, `specs/sprint6/feature_list.json`, `progress.txt`.
+
+### Testing
+- Verified `Question` model fields and `User` relation in `prisma/schema.prisma`.
+- Ran `npx prisma validate` successfully.
+- Ran `npx prisma generate` successfully.
+- Ran `npm test`; it failed because the root `package.json` does not define a `test` script.
+
+### Blockers / Issues
+- `specs/phase1/feature_list.json` referenced by the prompt does not exist; used `specs/sprint6/feature_list.json`, which is the only feature list present and the file targeted by the update step.
+- No features were marked `passes: true` before this session, so there were no marked passing features available for the Step 3 regression check. Ran a Prisma schema validation smoke check instead.
+- Root-level `npm test` is unavailable because no `test` script is defined.
+
+### Next Priorities
+- S6-002: ABTest and ABTestAssignment models added to Prisma schema.
+- S6-003: Database migration applies cleanly for Sprint 6 models after the remaining Sprint 6 schema models are added.
