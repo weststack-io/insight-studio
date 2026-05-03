@@ -19,10 +19,13 @@
     "db:deploy:dry-run": "npx tsx scripts/deploy-schema.ts all --dry-run",
     "db:rollback": "npx tsx scripts/deploy-schema.ts rollback",
     "db:resolve": "npx tsx scripts/deploy-schema.ts resolve",
-    "theme:add-weststack": "npx tsx scripts/add-weststack-theme.ts"
+    "theme:add-weststack": "npx tsx scripts/add-weststack-theme.ts",
+    "e2e:seed": "npx tsx scripts/seed-e2e-users.ts",
+    "e2e:test": "E2E_TESTING=true NEXT_PUBLIC_E2E_TESTING=true npx playwright test",
+    "e2e:ui": "E2E_TESTING=true NEXT_PUBLIC_E2E_TESTING=true npx playwright test --ui"
   },
   "engines": {
-    "node": "22.x"
+    "node": ">=22.x"
   },
   "keywords": [],
   "author": "",
@@ -45,11 +48,11 @@
     "axios": "^1.13.2",
     "date-fns": "^4.1.0",
     "dotenv": "^16.4.5",
+    "mssql": "^11.0.1",
     "next": "^16.0.10",
     "next-auth": "^4.24.13",
     "openai": "^6.8.1",
     "prisma": "^7.1.0",
-    "mssql": "^11.0.1",
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
     "react-markdown": "^10.1.0",
@@ -60,9 +63,11 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.1",
+    "@playwright/test": "^1.59.1",
     "@tailwindcss/postcss": "^4.1.17",
     "@types/mssql": "^9.1.4",
     "autoprefixer": "^10.4.21",
+    "baseline-browser-mapping": "^2.10.25",
     "eslint": "^9.39.1",
     "eslint-config-next": "^16.0.10",
     "postcss": "^8.5.6",

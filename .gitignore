@@ -119,6 +119,11 @@ temp/
 
 prisma/databases.json
 
+# Playwright
+.playwright/
+playwright-report/
+test-results/
+
 # Local config
 local.settings.json
 .claude/

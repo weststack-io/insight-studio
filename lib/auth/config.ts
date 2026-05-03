@@ -1,36 +1,71 @@
 import { NextAuthOptions } from "next-auth";
 import AzureADProvider from "next-auth/providers/azure-ad";
 import OktaProvider from "next-auth/providers/okta";
+import CredentialsProvider from "next-auth/providers/credentials";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import { prisma } from "@/lib/db/client";
 
-export const authOptions: NextAuthOptions = {
-  adapter: PrismaAdapter(prisma),
-  providers: [
-    AzureADProvider({
-      clientId: process.env.AZURE_AD_CLIENT_ID!,
-      clientSecret: process.env.AZURE_AD_CLIENT_SECRET!,
-      tenantId: process.env.AZURE_AD_TENANT_ID!,
-      authorization: {
-        params: {
-          scope: "openid profile email User.Read",
-        },
+const providers: NextAuthOptions["providers"] = [
+  AzureADProvider({
+    clientId: process.env.AZURE_AD_CLIENT_ID!,
+    clientSecret: process.env.AZURE_AD_CLIENT_SECRET!,
+    tenantId: process.env.AZURE_AD_TENANT_ID!,
+    authorization: {
+      params: {
+        scope: "openid profile email User.Read",
       },
-      allowDangerousEmailAccountLinking: true,
-    }),
-    ...(process.env.OKTA_CLIENT_ID &&
-    process.env.OKTA_CLIENT_SECRET &&
-    process.env.OKTA_ISSUER
-      ? [
-          OktaProvider({
-            clientId: process.env.OKTA_CLIENT_ID,
-            clientSecret: process.env.OKTA_CLIENT_SECRET,
-            issuer: process.env.OKTA_ISSUER,
-            allowDangerousEmailAccountLinking: true,
-          }),
-        ]
-      : []),
-  ],
+    },
+    allowDangerousEmailAccountLinking: true,
+  }),
+  ...(process.env.OKTA_CLIENT_ID &&
+  process.env.OKTA_CLIENT_SECRET &&
+  process.env.OKTA_ISSUER
+    ? [
+        OktaProvider({
+          clientId: process.env.OKTA_CLIENT_ID,
+          clientSecret: process.env.OKTA_CLIENT_SECRET,
+          issuer: process.env.OKTA_ISSUER,
+          allowDangerousEmailAccountLinking: true,
+        }),
+      ]
+    : []),
+];
+
+// E2E testing: add a credentials provider that allows login by email
+// against existing database users — no OAuth redirect needed.
+if (process.env.E2E_TESTING === "true") {
+  providers.push(
+    CredentialsProvider({
+      id: "e2e-credentials",
+      name: "E2E Test Login",
+      credentials: {
+        email: { label: "Email", type: "text" },
+      },
+      async authorize(credentials) {
+        if (!credentials?.email) return null;
+
+        const user = await prisma.user.findUnique({
+          where: { email: credentials.email },
+          include: { tenant: true },
+        });
+
+        if (!user) return null;
+
+        return {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+        };
+      },
+    })
+  );
+}
+
+export const authOptions: NextAuthOptions = {
+  // The Prisma adapter is skipped for credentials provider (JWT-only),
+  // but kept for OAuth providers that need Account/Session persistence.
+  adapter: PrismaAdapter(prisma),
+  providers,
   events: {
     async createUser({ user }) {
       // After the adapter creates the user, set our custom fields
