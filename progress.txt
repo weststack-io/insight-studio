@@ -28,3 +28,33 @@ Date: 2026-05-03
 ### Next Priorities
 - S6-002: ABTest and ABTestAssignment models added to Prisma schema.
 - S6-003: Database migration applies cleanly for Sprint 6 models after the remaining Sprint 6 schema models are added.
+
+## Session 2 -- Database
+Date: 2026-05-03
+
+### Feature Worked On
+- S6-002: ABTest and ABTestAssignment models added to Prisma schema
+- Status: PASSED
+
+### What Was Done
+- Added `ABTest` model with tenant, content type, JSON-text variants, date range, status, and created timestamp fields.
+- Added `ABTestAssignment` model with test/user relations, variant, assigned timestamp, deterministic uniqueness per test/user pair, and lookup indexes.
+- Added `Tenant.abTests` and `User.abTestAssignments` relation fields.
+- Marked `S6-002` as passing in `specs/sprint6/feature_list.json`.
+- Files created or modified: `prisma/schema.prisma`, `specs/sprint6/feature_list.json`.
+
+### Testing
+- Verified the dev server is responding: `/` redirects to `/login`, and following redirects returns HTTP 200.
+- Regression checked `S6-001` by confirming the `Question` model and `User.questions` relation still exist.
+- Ran `npx prisma validate` successfully before and after the schema change.
+- Ran `npx prisma generate` successfully before and after the schema change.
+- Ran `npm test`; it failed because the root `package.json` does not define a `test` script.
+
+### Blockers / Issues
+- `specs/phase1/feature_list.json` referenced by the prompt does not exist; used `specs/sprint6/feature_list.json`, which is the active Sprint 6 list and the required update target.
+- Root-level `npm test` remains unavailable because no `test` script is defined.
+- The worktree had unrelated pre-existing local changes before this session (`package-lock.json` and untracked helper files); they were not modified or staged for this feature.
+
+### Next Priorities
+- S6-003: Run `npm run db:push` and verify the Sprint 6 database tables exist.
+- S6-004: Begin the RAG-powered Q&A generator after the database migration feature passes.
