@@ -9,18 +9,21 @@ Date: 2026-05-03
 - Added a `Question` Prisma model with `id`, `userId`, `contentId`, `contentType`, `question`, `answer`, `status`, and `askedAt` fields.
 - Added the `User.questions` relation so user question history can be queried through Prisma.
 - Added indexes for user history, content filtering, and question status lookup.
-- Files created or modified: `prisma/schema.prisma`, `specs/sprint6/feature_list.json`, `progress.txt`.
+- Fixed root TypeScript cleanup by excluding Azure Functions Jest test files from the root Next.js TypeScript project.
+- Files created or modified: `prisma/schema.prisma`, `specs/sprint6/feature_list.json`, `progress.txt`, `tsconfig.json`.
 
 ### Testing
 - Verified `Question` model fields and `User` relation in `prisma/schema.prisma`.
 - Ran `npx prisma validate` successfully.
 - Ran `npx prisma generate` successfully.
 - Ran `npm test`; it failed because the root `package.json` does not define a `test` script.
+- Ran `npx tsc --noEmit`; it initially failed because root TypeScript included Azure Functions Jest tests without Jest globals, then passed after the `tsconfig.json` cleanup.
 
 ### Blockers / Issues
 - `specs/phase1/feature_list.json` referenced by the prompt does not exist; used `specs/sprint6/feature_list.json`, which is the only feature list present and the file targeted by the update step.
 - No features were marked `passes: true` before this session, so there were no marked passing features available for the Step 3 regression check. Ran a Prisma schema validation smoke check instead.
 - Root-level `npm test` is unavailable because no `test` script is defined.
+- Initial root `npx tsc --noEmit` failure was resolved by excluding `azure-functions/**/*.test.ts` from the root TypeScript project; those tests remain covered by the nested Azure Functions Jest configuration.
 
 ### Next Priorities
 - S6-002: ABTest and ABTestAssignment models added to Prisma schema.
