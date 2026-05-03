@@ -24,7 +24,7 @@
       "Run npx prisma validate to confirm schema is valid",
       "Run npx prisma generate to confirm client generates successfully"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "id": "S6-003",
